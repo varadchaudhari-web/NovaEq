@@ -1,0 +1,362 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 6%;
+    --foreground: 210 40% 98%;
+    --primary: 221 83% 53%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 222 47% 11%;
+    --secondary-foreground: 210 40% 98%;
+    --accent: 160 84% 39%;
+    --accent-foreground: 210 40% 98%;
+    --muted: 217 33% 17%;
+    --muted-foreground: 215 20% 65%;
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 221 83% 53%;
+    --radius: 0.75rem;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+  }
+
+  * {
+    @apply border-nova-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-nova-bg text-nova-text font-sans antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0F172A;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+  }
+
+  ::selection {
+    background: rgba(29, 78, 216, 0.4);
+    color: #F8FAFC;
+  }
+}
+
+@layer components {
+  .nova-glass {
+    background: rgba(15, 23, 42, 0.7);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .nova-glass-light {
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .nova-card {
+    @apply bg-nova-surface rounded-xl border border-nova-border shadow-nova-card;
+    transition: all 0.2s ease;
+  }
+
+  .nova-card:hover {
+    border-color: rgba(29, 78, 216, 0.3);
+    box-shadow: 0 4px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(29, 78, 216, 0.15);
+    transform: translateY(-1px);
+  }
+
+  .nova-btn-primary {
+    @apply bg-nova-primary hover:bg-nova-primary-light text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200;
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.35);
+  }
+
+  .nova-btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(29, 78, 216, 0.5);
+    transform: translateY(-1px);
+  }
+
+  .nova-btn-accent {
+    @apply bg-nova-accent hover:bg-nova-accent-light text-white font-semibold px-6 py-3 rounded-lg transition-all duration-200;
+    box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  }
+
+  .nova-btn-outline {
+    @apply border border-nova-border-light text-nova-text hover:border-nova-primary hover:text-nova-primary-light font-semibold px-6 py-3 rounded-lg transition-all duration-200;
+  }
+
+  .nova-btn-ghost {
+    @apply text-nova-text-muted hover:text-nova-text hover:bg-nova-surface2 px-4 py-2 rounded-lg transition-all duration-200;
+  }
+
+  .nova-input {
+    @apply bg-nova-surface2 border border-nova-border text-nova-text placeholder-nova-text-subtle rounded-lg px-4 py-3 w-full focus:outline-none focus:border-nova-primary focus:ring-1 focus:ring-nova-primary transition-all duration-200;
+    font-size: 16px;
+  }
+
+  .nova-label {
+    @apply text-nova-text-muted text-sm font-medium mb-1.5 block;
+  }
+
+  .nova-badge-green {
+    @apply bg-nova-accent/10 text-nova-accent text-xs font-semibold px-2.5 py-1 rounded-full border border-nova-accent/20;
+  }
+
+  .nova-badge-red {
+    @apply bg-nova-red/10 text-nova-red text-xs font-semibold px-2.5 py-1 rounded-full border border-nova-red/20;
+  }
+
+  .nova-badge-blue {
+    @apply bg-nova-primary/10 text-nova-primary-light text-xs font-semibold px-2.5 py-1 rounded-full border border-nova-primary/20;
+  }
+
+  .nova-badge-yellow {
+    @apply bg-nova-yellow/10 text-nova-yellow text-xs font-semibold px-2.5 py-1 rounded-full border border-nova-yellow/20;
+  }
+
+  .nova-stat-card {
+    @apply nova-card p-5 cursor-pointer;
+  }
+
+  .nova-section-title {
+    @apply text-2xl font-display font-bold text-nova-text mb-1;
+  }
+
+  .nova-section-subtitle {
+    @apply text-nova-text-muted text-sm mb-6;
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #60A5FA, #10B981);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-gold {
+    background: linear-gradient(135deg, #F59E0B, #EF4444);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .shimmer-effect {
+    background: linear-gradient(90deg, #1E293B 25%, #334155 50%, #1E293B 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  .ticker-wrapper {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+
+  .ticker-content {
+    display: inline-flex;
+    animation: ticker 30s linear infinite;
+  }
+
+  .ticker-content:hover {
+    animation-play-state: paused;
+  }
+
+  .sidebar-nav-item {
+    @apply flex items-center gap-3 px-4 py-3 rounded-xl text-nova-text-muted hover:text-nova-text hover:bg-nova-surface2 transition-all duration-200 cursor-pointer text-sm font-medium;
+  }
+
+  .sidebar-nav-item.active {
+    @apply bg-nova-primary/10 text-nova-primary-light border border-nova-primary/20;
+  }
+
+  .mono {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+  }
+
+  .font-display {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+
+  .font-mono-nums {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 3D Glass Hero Panel */
+  .hero-glass-panel {
+    border: 1px solid rgba(28, 42, 69, 0.9);
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    background: linear-gradient(160deg, rgba(20, 35, 62, 0.86), rgba(11, 20, 40, 0.82));
+    border-radius: 20px;
+    box-shadow: 0 40px 90px -50px rgba(0, 0, 0, 0.95);
+    transform-style: preserve-3d;
+    transition: transform 0.15s ease-out;
+  }
+
+  /* Floating 3D Badges */
+  @keyframes float-badge {
+    0%, 100% {
+      transform: translate3d(0, 0, 50px);
+    }
+    50% {
+      transform: translate3d(0, -9px, 50px);
+    }
+  }
+
+  @keyframes float-badge-rev {
+    0%, 100% {
+      transform: translate3d(0, 0, 40px);
+    }
+    50% {
+      transform: translate3d(0, 8px, 40px);
+    }
+  }
+
+  .chip-ai-floating {
+    animation: float-badge 6s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+
+  .chip-gain-floating {
+    animation: float-badge-rev 7.5s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+
+  /* 3D Tilt Feature Card */
+  .tilt-fcard {
+    border: 1px solid rgba(28, 42, 69, 0.8);
+    transform-style: preserve-3d;
+    will-change: transform;
+    background: linear-gradient(170deg, rgba(17, 30, 55, 0.92), rgba(10, 18, 36, 0.86));
+    border-radius: 18px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .tilt-fcard:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.8), 0 0 25px -5px rgba(59, 130, 246, 0.25);
+  }
+
+  .tilt-fcard::after {
+    content: "";
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%), rgba(59, 130, 246, 0.2), transparent 70%);
+    transition: opacity 0.3s;
+    position: absolute;
+    inset: 0;
+  }
+
+  .tilt-fcard:hover::after {
+    opacity: 1;
+  }
+
+  /* Seamless Marquee Ticker */
+  @keyframes tape-scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-tape {
+    display: flex;
+    width: max-content;
+    animation: tape-scroll 38s linear infinite;
+  }
+
+  .animate-tape:hover {
+    animation-play-state: paused;
+  }
+
+  /* 3D AI Card Deck */
+  .deck-container {
+    perspective: 1200px;
+    height: 330px;
+    transform-style: preserve-3d;
+    position: relative;
+  }
+
+  .deck-card {
+    border: 1px solid rgba(28, 42, 69, 0.9);
+    transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.55s cubic-bezier(0.16, 1, 0.3, 1), filter 0.55s;
+    will-change: transform;
+    backface-visibility: hidden;
+    background: linear-gradient(165deg, rgba(20, 35, 62, 0.96), rgba(11, 20, 40, 0.94));
+    border-radius: 18px;
+    position: absolute;
+    inset: 0 0 auto;
+    box-shadow: 0 40px 80px -46px rgba(0, 0, 0, 0.95);
+  }
+
+  /* Pulse dot animation */
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+    }
+  }
+
+  .live-dot-pulse {
+    animation: pulse-ring 2s infinite;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .glass-modal {
+    background: rgba(10, 15, 30, 0.85);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
