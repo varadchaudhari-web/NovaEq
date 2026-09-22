@@ -1,6 +1,21 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { TrendingUp, TrendingDown, Search, Filter, BarChart2, Activity, Globe, RefreshCw } from 'lucide-react';
+import {
+  TrendingUp,
+  TrendingDown,
+  Search,
+  Filter,
+  BarChart2,
+  Activity,
+  Globe,
+  RefreshCw,
+  X,
+  ExternalLink,
+  Shield,
+  Brain,
+  Check,
+  Zap,
+} from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, Cell } from 'recharts';
 import MarketTicker from '@/components/features/MarketTicker';
 import TiltCard from '@/components/ui/TiltCard';
@@ -9,6 +24,65 @@ import { mockMarketStocks } from '@/lib/mockData';
 import { formatCurrency, formatPercent, cn } from '@/lib/utils';
 
 const sectors = ['All', 'Technology', 'Financial Services', 'Healthcare', 'Consumer Discretionary', 'Energy'];
+
+interface IndexModalInfo {
+  name: string;
+  value: string;
+  change: string;
+  positive: boolean;
+  high52w: string;
+  low52w: string;
+  pe: string;
+  description: string;
+  topConstituents: string[];
+}
+
+const indexDetailsData: Record<string, IndexModalInfo> = {
+  'NIFTY 50': {
+    name: 'NIFTY 50',
+    value: '22,531.05',
+    change: '+0.21%',
+    positive: true,
+    high52w: '22,783.40',
+    low52w: '18,837.85',
+    pe: '22.8',
+    description: 'The benchmark index of the National Stock Exchange of India representing the 50 largest and most liquid Indian securities across 13 sectors.',
+    topConstituents: ['HDFC Bank (11.8%)', 'Reliance Industries (9.7%)', 'ICICI Bank (7.9%)', 'Infosys (5.8%)', 'TCS (4.2%)'],
+  },
+  'SENSEX': {
+    name: 'SENSEX (BSE 30)',
+    value: '74,572.35',
+    change: '+0.25%',
+    positive: true,
+    high52w: '75,124.28',
+    low52w: '62,014.20',
+    pe: '24.1',
+    description: 'The oldest and most tracked stock market index in India, tracking 30 well-established financially sound companies listed on BSE.',
+    topConstituents: ['Reliance Ind (10.2%)', 'HDFC Bank (12.4%)', 'ICICI Bank (8.1%)', 'Infosys (6.1%)', 'ITC (4.3%)'],
+  },
+  'NASDAQ': {
+    name: 'NASDAQ Composite',
+    value: '16,742.39',
+    change: '-0.12%',
+    positive: false,
+    high52w: '17,100.80',
+    low52w: '12,543.15',
+    pe: '28.6',
+    description: 'The premier global technology index heavily weighted towards modern tech, semiconductor, software, and biotechnology innovators.',
+    topConstituents: ['Apple Inc (12.1%)', 'Microsoft (11.9%)', 'Nvidia (6.8%)', 'Amazon (6.2%)', 'Meta (4.5%)'],
+  },
+  'S&P 500': {
+    name: 'S&P 500 Index',
+    value: '5,234.18',
+    change: '+0.07%',
+    positive: true,
+    high52w: '5,320.10',
+    low52w: '4,103.78',
+    pe: '25.4',
+    description: 'The leading benchmark for the U.S. equity market, tracking 500 of the largest public American corporations representing ~80% of available market cap.',
+    topConstituents: ['Microsoft (7.1%)', 'Apple (6.2%)', 'Nvidia (5.4%)', 'Amazon (3.8%)', 'Alphabet (3.6%)'],
+  },
+};
 
 const heatmapData = [
   { name: 'Technology', change: 1.42, size: 'large', stocks: ['AAPL +1.12%', 'NVDA +2.16%', 'MSFT -0.80%'] },
@@ -33,6 +107,11 @@ const Markets: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'overview' | 'heatmap' | 'watchlist'>('overview');
   const [selectedStock, setSelectedStock] = useState(mockMarketStocks[2]);
 
+  // Modal State for card clicks
+  const [modalStock, setModalStock] = useState<(typeof mockMarketStocks)[0] | null>(null);
+  const [modalIndex, setModalIndex] = useState<IndexModalInfo | null>(null);
+  const [modalSector, setModalSector] = useState<(typeof heatmapData)[0] | null>(null);
+
   const filtered = mockMarketStocks.filter(s => {
     const matchSearch = s.symbol.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.name.toLowerCase().includes(searchQuery.toLowerCase());
@@ -48,7 +127,7 @@ const Markets: React.FC = () => {
     else addToWatchlist(symbol);
   };
 
-  const handleTradeAction = () => {
+  const handleTradeAction = (symbol?: string) => {
     if (!isLoggedIn) {
       openAuthModal('Trade stocks with your NovaEq account — sign in to place orders.');
       return;
@@ -61,7 +140,7 @@ const Markets: React.FC = () => {
       admin: '/dashboard/admin',
     };
     navigate(paths[currentUser?.role || 'investor'] || '/dashboard/investor', {
-      state: { activeTab: currentUser?.role === 'trader' ? 'trading' : 'markets' },
+      state: { activeTab: currentUser?.role === 'trader' ? 'trading' : 'markets', selectedSymbol: symbol },
     });
   };
 
@@ -86,8 +165,16 @@ const Markets: React.FC = () => {
               { label: 'NASDAQ', value: '16,742.39', change: '-0.12%', positive: false },
               { label: 'S&P 500', value: '5,234.18', change: '+0.07%', positive: true },
             ].map(m => (
-              <TiltCard key={m.label} className="p-4" tiltMaxAngle={8}>
-                <p className="text-xs text-nova-text-muted mb-1">{m.label}</p>
+              <TiltCard
+                key={m.label}
+                className="p-4 cursor-pointer hover:border-nova-primary/50 transition-all group"
+                tiltMaxAngle={8}
+                onClick={() => setModalIndex(indexDetailsData[m.label] || null)}
+              >
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-xs text-nova-text-muted">{m.label}</p>
+                  <span className="text-[10px] text-nova-primary-light font-mono opacity-0 group-hover:opacity-100 transition-opacity">Details &rarr;</span>
+                </div>
                 <p className="text-xl font-bold text-nova-text">{m.value}</p>
                 <span className={`text-sm font-semibold ${m.positive ? 'text-nova-green' : 'text-nova-red'}`}>{m.change}</span>
               </TiltCard>
@@ -152,7 +239,10 @@ const Markets: React.FC = () => {
                       'grid grid-cols-6 px-4 py-3 border-t border-nova-border/50 hover:bg-nova-surface2 transition-colors cursor-pointer',
                       selectedStock.symbol === stock.symbol && 'bg-nova-primary/5 border-l-2 border-l-nova-primary'
                     )}
-                    onClick={() => setSelectedStock(stock)}
+                    onClick={() => {
+                      setSelectedStock(stock);
+                      setModalStock(stock);
+                    }}
                   >
                     <div className="col-span-2">
                       <p className="text-sm font-bold text-nova-text">{stock.symbol}</p>
@@ -164,7 +254,13 @@ const Markets: React.FC = () => {
                       <p className="text-xs">{stock.change >= 0 ? '+' : ''}${stock.change.toFixed(2)}</p>
                     </div>
                     <p className="text-xs text-nova-text-muted text-right self-center">{stock.volume}</p>
-                    <div className="flex justify-end self-center">
+                    <div className="flex justify-end self-center gap-1.5">
+                      <button
+                        onClick={e => { e.stopPropagation(); setModalStock(stock); }}
+                        className="text-xs px-2.5 py-1 rounded-lg border border-blue-500/30 text-blue-400 hover:bg-blue-500/10 transition-all font-medium"
+                      >
+                        Details
+                      </button>
                       <button
                         onClick={e => { e.stopPropagation(); handleWatchlistToggle(stock.symbol); }}
                         className={cn(
@@ -174,7 +270,7 @@ const Markets: React.FC = () => {
                             : 'border-nova-border text-nova-text-muted hover:border-nova-primary/30 hover:text-nova-primary-light'
                         )}
                       >
-                        {watchlist.includes(stock.symbol) ? '★ Added' : '☆ Watch'}
+                        {watchlist.includes(stock.symbol) ? '★' : '☆'}
                       </button>
                     </div>
                   </div>
@@ -237,16 +333,16 @@ const Markets: React.FC = () => {
 
                 <div className="flex gap-2 mt-4">
                   <button
-                    onClick={handleTradeAction}
+                    onClick={() => setModalStock(selectedStock)}
                     className="flex-1 nova-btn-accent text-sm py-2.5"
                   >
-                    Buy
+                    View Details
                   </button>
                   <button
-                    onClick={handleTradeAction}
-                    className="flex-1 bg-nova-red/10 border border-nova-red/30 text-nova-red hover:bg-nova-red/20 rounded-lg text-sm py-2.5 font-semibold transition-all"
+                    onClick={() => handleTradeAction(selectedStock.symbol)}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-lg text-sm py-2.5 font-semibold transition-all shadow-md shadow-blue-500/20"
                   >
-                    Sell
+                    Trade in Dashboard
                   </button>
                 </div>
               </TiltCard>
@@ -263,11 +359,15 @@ const Markets: React.FC = () => {
                 return (
                   <TiltCard
                     key={sector.name}
-                    className={cn('p-5 border cursor-pointer', sector.change >= 0 ? 'border-nova-green/20' : 'border-nova-red/20')}
+                    className={cn('p-5 border cursor-pointer hover:border-nova-primary/50 transition-all group', sector.change >= 0 ? 'border-nova-green/20' : 'border-nova-red/20')}
                     tiltMaxAngle={10}
+                    onClick={() => setModalSector(sector)}
                   >
                     <div className="flex justify-between items-start mb-3">
-                      <h3 className="text-sm font-bold text-nova-text">{sector.name}</h3>
+                      <div>
+                        <h3 className="text-sm font-bold text-nova-text">{sector.name}</h3>
+                        <span className="text-[10px] text-nova-primary-light opacity-0 group-hover:opacity-100 transition-opacity">View Sector &rarr;</span>
+                      </div>
                       <span className={`text-lg font-black ${sector.change >= 0 ? 'text-nova-green' : 'text-nova-red'}`}>
                         {sector.change >= 0 ? '+' : ''}{sector.change.toFixed(2)}%
                       </span>
@@ -323,7 +423,12 @@ const Markets: React.FC = () => {
             ) : (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {watchlisted.map(stock => (
-                  <TiltCard key={stock.symbol} className="p-5 cursor-pointer" tiltMaxAngle={10}>
+                  <TiltCard
+                    key={stock.symbol}
+                    className="p-5 cursor-pointer hover:border-nova-primary/50 transition-all"
+                    tiltMaxAngle={10}
+                    onClick={() => setModalStock(stock)}
+                  >
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <p className="text-lg font-bold text-nova-text">{stock.symbol}</p>
@@ -352,6 +457,357 @@ const Markets: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* ========================================================================= */}
+      {/* STOCK INTELLIGENCE SHOWCASE MODAL                                         */}
+      {/* ========================================================================= */}
+      {modalStock && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div
+            className="relative w-full max-w-2xl bg-[#0b1428] border border-[#1c2a45] rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 bg-gradient-to-b from-[#12203d] to-[#0b1428] border-b border-[#1c2a45] relative">
+              <button
+                onClick={() => setModalStock(null)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#1c2a45]/80 hover:bg-[#2a3c61] text-slate-300 flex items-center justify-center transition-colors"
+              >
+                <X size={16} />
+              </button>
+
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/25">
+                  {modalStock.sector}
+                </span>
+                <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/25">
+                  AI Conviction: 88%
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between mt-2">
+                <div>
+                  <h3 className="text-2xl sm:text-3xl font-display font-black text-white">
+                    {modalStock.symbol}
+                  </h3>
+                  <p className="text-sm text-slate-400">{modalStock.name}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-mono font-bold text-white">${modalStock.price.toFixed(2)}</p>
+                  <span
+                    className={`text-sm font-semibold ${
+                      modalStock.changePercent >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                    }`}
+                  >
+                    {modalStock.changePercent >= 0 ? '+' : ''}
+                    {modalStock.changePercent.toFixed(2)}% (${modalStock.change.toFixed(2)})
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              {/* Chart */}
+              <div className="p-4 rounded-2xl bg-[#0f1c33]/70 border border-[#1c2a45]">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-slate-400 font-mono">30-Day Historical Trend</span>
+                  <span className="text-xs text-slate-300 font-mono">High: ${modalStock.high52w.toFixed(2)} | Low: ${modalStock.low52w.toFixed(2)}</span>
+                </div>
+                <div className="h-44">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={modalStock.priceHistory.slice(-30)}>
+                      <defs>
+                        <linearGradient id="modalStockGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop
+                            offset="5%"
+                            stopColor={modalStock.changePercent >= 0 ? '#10B981' : '#EF4444'}
+                            stopOpacity={0.3}
+                          />
+                          <stop
+                            offset="95%"
+                            stopColor={modalStock.changePercent >= 0 ? '#10B981' : '#EF4444'}
+                            stopOpacity={0}
+                          />
+                        </linearGradient>
+                      </defs>
+                      <XAxis dataKey="date" hide />
+                      <YAxis hide domain={['dataMin * 0.98', 'dataMax * 1.02']} />
+                      <Tooltip
+                        contentStyle={{
+                          background: '#0b1428',
+                          borderColor: '#1c2a45',
+                          borderRadius: 8,
+                          fontSize: 11,
+                        }}
+                        formatter={(v: number) => [`$${v.toFixed(2)}`, 'Price']}
+                      />
+                      <Area
+                        type="monotone"
+                        dataKey="price"
+                        stroke={modalStock.changePercent >= 0 ? '#10B981' : '#EF4444'}
+                        fill="url(#modalStockGrad)"
+                        strokeWidth={2}
+                        dot={false}
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
+
+              {/* Key Financial Metrics */}
+              <div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">
+                  Institutional Fundamentals
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div className="p-3 rounded-xl bg-[#0f1c33] border border-[#1c2a45]">
+                    <span className="text-[11px] text-slate-400 block mb-0.5">Market Cap</span>
+                    <b className="font-mono text-sm text-slate-100">{modalStock.marketCap}</b>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#0f1c33] border border-[#1c2a45]">
+                    <span className="text-[11px] text-slate-400 block mb-0.5">Volume</span>
+                    <b className="font-mono text-sm text-slate-100">{modalStock.volume}</b>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#0f1c33] border border-[#1c2a45]">
+                    <span className="text-[11px] text-slate-400 block mb-0.5">P/E Ratio</span>
+                    <b className="font-mono text-sm text-emerald-400">{modalStock.pe.toFixed(1)}</b>
+                  </div>
+                  <div className="p-3 rounded-xl bg-[#0f1c33] border border-[#1c2a45]">
+                    <span className="text-[11px] text-slate-400 block mb-0.5">EPS (TTM)</span>
+                    <b className="font-mono text-sm text-slate-100">${modalStock.eps.toFixed(2)}</b>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Quantitative Summary */}
+              <div className="p-4 rounded-xl bg-[#0f1c33]/40 border border-[#1c2a45] space-y-2">
+                <div className="flex items-center gap-2 text-xs font-semibold text-blue-400">
+                  <Brain size={16} />
+                  <span>AI Quantitative Sentiment & Health Score</span>
+                </div>
+                <p className="text-xs text-slate-300 leading-relaxed">
+                  {modalStock.symbol} displays strong balance-sheet resilience with robust operating cash flows. Momentum indicators show high institutional accumulation above key moving averages with balanced risk-reward parameters.
+                </p>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 bg-[#080e1c] border-t border-[#1c2a45] flex flex-wrap items-center justify-between gap-3">
+              <button
+                onClick={() => setModalStock(null)}
+                className="px-4 py-2 rounded-xl border border-[#1c2a45] text-slate-400 hover:text-white text-xs font-medium"
+              >
+                Close
+              </button>
+
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={() => handleWatchlistToggle(modalStock.symbol)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-[#1c2a45] transition-all"
+                >
+                  {watchlist.includes(modalStock.symbol) ? '★ In Watchlist' : '☆ Add to Watchlist'}
+                </button>
+
+                <button
+                  onClick={() => {
+                    setModalStock(null);
+                    navigate('/ai-insights');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-xs font-semibold"
+                >
+                  Explore in AI Insights
+                </button>
+
+                <button
+                  onClick={() => {
+                    const sym = modalStock.symbol;
+                    setModalStock(null);
+                    handleTradeAction(sym);
+                  }}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-semibold shadow-md shadow-blue-500/25 flex items-center gap-1.5"
+                >
+                  <span>Trade in Dashboard</span>
+                  <ExternalLink size={14} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* INDEX INTELLIGENCE SHOWCASE MODAL                                         */}
+      {/* ========================================================================= */}
+      {modalIndex && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div
+            className="relative w-full max-w-lg bg-[#0b1428] border border-[#1c2a45] rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 bg-gradient-to-b from-[#12203d] to-[#0b1428] border-b border-[#1c2a45] relative">
+              <button
+                onClick={() => setModalIndex(null)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#1c2a45]/80 hover:bg-[#2a3c61] text-slate-300 flex items-center justify-center transition-colors"
+              >
+                <X size={16} />
+              </button>
+
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/25">
+                Benchmark Index
+              </span>
+
+              <div className="flex items-center justify-between mt-3">
+                <div>
+                  <h3 className="text-2xl font-display font-bold text-white">{modalIndex.name}</h3>
+                  <p className="text-xs text-slate-400">Global Market Barometer</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-mono font-bold text-white">{modalIndex.value}</p>
+                  <span className={`text-sm font-semibold ${modalIndex.positive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                    {modalIndex.change}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <p className="text-xs text-slate-300 leading-relaxed bg-[#0f1c33]/50 p-3.5 rounded-xl border border-[#1c2a45]">
+                {modalIndex.description}
+              </p>
+
+              <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-[#0f1c33] border border-[#1c2a45] text-center">
+                <div>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">52W High</span>
+                  <b className="font-mono text-xs text-emerald-400">{modalIndex.high52w}</b>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">52W Low</span>
+                  <b className="font-mono text-xs text-slate-200">{modalIndex.low52w}</b>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">Index P/E</span>
+                  <b className="font-mono text-xs text-blue-400">{modalIndex.pe}</b>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
+                  Top Weighted Constituents
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {modalIndex.topConstituents.map((c, i) => (
+                    <span
+                      key={i}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-[#0f1c33] border border-[#1c2a45] text-slate-300"
+                    >
+                      {c}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 bg-[#080e1c] border-t border-[#1c2a45] flex items-center justify-between gap-3">
+              <button
+                onClick={() => setModalIndex(null)}
+                className="px-4 py-2 rounded-xl border border-[#1c2a45] text-slate-400 hover:text-white text-xs font-medium"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setModalIndex(null);
+                  handleTradeAction();
+                }}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-semibold shadow-md flex items-center gap-1.5"
+              >
+                <span>View Markets in Dashboard</span>
+                <ExternalLink size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* SECTOR SHOWCASE MODAL                                                     */}
+      {/* ========================================================================= */}
+      {modalSector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div
+            className="relative w-full max-w-md bg-[#0b1428] border border-[#1c2a45] rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 bg-gradient-to-b from-[#12203d] to-[#0b1428] border-b border-[#1c2a45] relative">
+              <button
+                onClick={() => setModalSector(null)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#1c2a45]/80 hover:bg-[#2a3c61] text-slate-300 flex items-center justify-center transition-colors"
+              >
+                <X size={16} />
+              </button>
+
+              <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/25">
+                Sector Overview
+              </span>
+
+              <div className="flex items-center justify-between mt-3">
+                <h3 className="text-2xl font-display font-bold text-white">{modalSector.name}</h3>
+                <span className={`text-xl font-bold font-mono ${modalSector.change >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                  {modalSector.change >= 0 ? '+' : ''}{modalSector.change.toFixed(2)}%
+                </span>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
+                  Top Performing Stocks Today
+                </h4>
+                <div className="space-y-2">
+                  {modalSector.stocks.map((stk, i) => (
+                    <div key={i} className="p-2.5 rounded-xl bg-[#0f1c33] border border-[#1c2a45] flex items-center justify-between text-xs font-mono">
+                      <span className="text-slate-200 font-bold">{stk.split(' ')[0]}</span>
+                      <span className={stk.includes('+') ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
+                        {stk.split(' ')[1]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Institutional fund flows indicate strong momentum rotation within the {modalSector.name} sector over the current trading cycle.
+              </p>
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 bg-[#080e1c] border-t border-[#1c2a45] flex items-center justify-between gap-3">
+              <button
+                onClick={() => setModalSector(null)}
+                className="px-4 py-2 rounded-xl border border-[#1c2a45] text-slate-400 hover:text-white text-xs font-medium"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setModalSector(null);
+                  handleTradeAction();
+                }}
+                className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-semibold shadow-md flex items-center gap-1.5"
+              >
+                <span>Trade Sector in Dashboard</span>
+                <ExternalLink size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

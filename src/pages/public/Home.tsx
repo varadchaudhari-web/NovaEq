@@ -10,6 +10,14 @@ import {
   ArrowRight,
   Play,
   Check,
+  X,
+  ExternalLink,
+  Sparkles,
+  Layers,
+  ChevronRight,
+  TrendingUp,
+  Activity,
+  Award,
 } from 'lucide-react';
 import ThreeCandlestickTerrain from '@/components/home/ThreeCandlestickTerrain';
 import LiveSparklineCanvas from '@/components/home/LiveSparklineCanvas';
@@ -19,9 +27,28 @@ import MarketTickerTape from '@/components/home/MarketTickerTape';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
 import { useAppStore } from '@/stores/useAppStore';
 
+interface FeatureModalData {
+  id: string;
+  title: string;
+  category: string;
+  badge: string;
+  icon: any;
+  color: string;
+  description: string;
+  highlights: string[];
+  capabilities: { label: string; detail: string }[];
+  targetRoute: string;
+  dashboardTab?: string;
+  metrics?: { label: string; val: string }[];
+}
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
-  const { isLoggedIn, openAuthModal } = useAppStore();
+  const { isLoggedIn, openAuthModal, currentUser } = useAppStore();
+
+  // Selected Card Modal State
+  const [selectedFeature, setSelectedFeature] = useState<FeatureModalData | null>(null);
+  const [selectedSignal, setSelectedSignal] = useState<AISignalCardData | null>(null);
 
   // Mouse Parallax for Hero Panel & Typography
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -70,16 +97,297 @@ const Home: React.FC = () => {
     setMousePos({ x: 0, y: 0 });
   };
 
-  const handleProtectedAction = (reason: string) => {
-    if (!isLoggedIn) {
-      openAuthModal(reason);
-    } else {
-      navigate('/dashboard/investor');
-    }
+  const platformFeatures: FeatureModalData[] = [
+    {
+      id: 'ai-insights',
+      title: 'AI-Powered Insights',
+      category: 'Institutional Intelligence',
+      badge: 'Machine Learning V3',
+      icon: Brain,
+      color: 'blue',
+      description:
+        'Our proprietary deep learning engine continuously evaluates 500+ quantitative and qualitative metrics across equities. It synthesizes quarterly financial filings, real-time options order flows, sector sentiment, and multi-factor macro indicators to produce high-probability trading setups.',
+      highlights: [
+        'Multi-factor machine learning models with 87.4% historical directional accuracy',
+        'Instant multi-timeframe catalysts: earnings surprises, insider accumulation, and breakout detection',
+        'Dynamic risk-reward scoring calibrated to individual risk tolerance profiles',
+        'Automated sector rotation tracking across NIFTY, NASDAQ, and global indices',
+      ],
+      capabilities: [
+        { label: 'Signal Engine', detail: 'Real-time BUY / SELL / HOLD ratings with confidence levels.' },
+        { label: 'Sentiment Index', detail: 'Analyzes 10,000+ daily financial news articles & social feeds.' },
+        { label: 'Valuation Matrix', detail: 'DCF, EV/EBITDA, and relative historical multiples updated live.' },
+        { label: 'Risk Calibrator', detail: 'Tailors position sizing recommendations to protect your portfolio.' },
+      ],
+      metrics: [
+        { label: 'Alpha Generated', val: '+28.4% YoY' },
+        { label: 'Signals / Week', val: '45+ Verified' },
+        { label: 'Data Points / Stock', val: '500+ Live' },
+      ],
+      targetRoute: '/ai-insights',
+      dashboardTab: 'portfolio',
+    },
+    {
+      id: 'algo-trading',
+      title: 'Algorithmic Trading',
+      category: 'Automated Execution',
+      badge: 'Zero-Code & Python API',
+      icon: Zap,
+      color: 'emerald',
+      description:
+        'Design, simulate, and execute high-performance algorithmic trading strategies without writing complex code. Connect directly to exchange brokerages with ultra-low latency execution, smart trailing stop-losses, and automated portfolio rebalancing.',
+      highlights: [
+        'Visual drag-and-drop strategy builder with 80+ pre-built mathematical triggers',
+        '10-year tick-by-tick backtesting engine with realistic slippage and fee modeling',
+        'Sub-millisecond smart order routing directly to major brokerages and exchanges',
+        'Continuous risk bounds monitoring with automated circuit breakers and max drawdown caps',
+      ],
+      capabilities: [
+        { label: 'Visual Builder', detail: 'Construct RSI, MACD, Volume Profile, and Mean-Reversion rules in minutes.' },
+        { label: 'Backtester', detail: 'Simulate against 10+ years of historical market tick data instantly.' },
+        { label: 'Webhooks & API', detail: 'Integrate custom TradingView alerts or Python scripts seamlessly.' },
+        { label: 'Live Auto-Pilot', detail: 'Hands-off trade placement with multi-broker execution support.' },
+      ],
+      metrics: [
+        { label: 'Execution Speed', val: '< 12ms Avg' },
+        { label: 'Active Bots', val: '14,200+' },
+        { label: 'Strategy Templates', val: '35+ Ready' },
+      ],
+      targetRoute: '/learn',
+      dashboardTab: 'trading',
+    },
+    {
+      id: 'advanced-analytics',
+      title: 'Advanced Analytics',
+      category: 'Market Intelligence',
+      badge: 'Pro Charting & Heatmaps',
+      icon: BarChart2,
+      color: 'amber',
+      description:
+        'Experience institutional grade charting powered by TradingView engines with real-time level 2 order books, multi-timeframe sector heatmaps, volume profile analysis, and options chain volatility surfaces.',
+      highlights: [
+        '80+ professional technical indicators including Supertrend, Fibonacci, VWAP, and Bollinger Bands',
+        'Live market breadth trackers and sector correlation matrices',
+        'Unusual options activity scanner detecting institutional block trades and dark pool flows',
+        'Custom watchlists with cloud sync and multi-device push notifications',
+      ],
+      capabilities: [
+        { label: 'Pro Charting', detail: 'Interactive candlestick, Renko, and Heikin-Ashi multi-charts.' },
+        { label: 'Sector Heatmaps', detail: 'Live visual capital flow maps across all market sectors.' },
+        { label: 'Order Book Depth', detail: 'Real-time Level 2 bid/ask liquidity visualization.' },
+        { label: 'Smart Alerts', detail: 'Price alerts triggered by volatility, volume surges, or breakout lines.' },
+      ],
+      metrics: [
+        { label: 'Data Latency', val: '< 50ms Live' },
+        { label: 'Indicators', val: '80+ Built-in' },
+        { label: 'Tracked Assets', val: '5,000+ Stocks' },
+      ],
+      targetRoute: '/markets',
+      dashboardTab: 'markets',
+    },
+    {
+      id: 'smart-risk',
+      title: 'Smart Risk Management',
+      category: 'Capital Protection',
+      badge: 'Institutional Grade',
+      icon: Shield,
+      color: 'purple',
+      description:
+        'Protect your capital like an institutional fund. NovaEq automatically assesses your portfolio concentration risk, stress-tests against historical black-swan events, and calculates real-time Value-at-Risk (VaR).',
+      highlights: [
+        'Real-time portfolio stress testing against 2008 Crash, 2020 Pandemic, and Rate Hikes',
+        'Automated Value-at-Risk (VaR) and conditional drawdown calculations',
+        'Sector and asset concentration alerts to prevent overexposure',
+        'Automated stop-loss trailing and hedging suggestion alerts',
+      ],
+      capabilities: [
+        { label: 'VaR Calculator', detail: 'Predicts maximum estimated loss under 95% and 99% confidence intervals.' },
+        { label: 'Stress Tester', detail: 'Simulates portfolio performance across extreme macro scenarios.' },
+        { label: 'Rebalance Helper', detail: 'Generates optimal rebalancing orders to keep allocation on target.' },
+        { label: 'Downside Shields', detail: 'Automated triggers to lock in profits and trim struggling holdings.' },
+      ],
+      metrics: [
+        { label: 'Risk Coverage', val: '100% Monitored' },
+        { label: 'Max Drawdown Saved', val: '14.2% Avg' },
+        { label: 'Stress Scenarios', val: '18+ Presets' },
+      ],
+      targetRoute: '/markets',
+      dashboardTab: 'portfolio',
+    },
+    {
+      id: 'social-investing',
+      title: 'Social Investing Network',
+      category: 'Collaborative Alpha',
+      badge: '125K+ Community',
+      icon: Users,
+      color: 'cyan',
+      description:
+        'Connect with verified high-performing investors, study verified trade logs, share actionable theses, and optionally copy vetted portfolio strategies in real time with transparent track records.',
+      highlights: [
+        'Verified trader leaderboards with audited win rates, Sharpe ratios, and total returns',
+        'Live trade idea feeds with bullish/bearish sentiment tags and thesis breakdowns',
+        'One-click portfolio copy trading with proportional position sizing and risk caps',
+        'Interactive community discussions, comments, and direct peer collaboration',
+      ],
+      capabilities: [
+        { label: 'Verified Rankings', detail: 'Audit-checked monthly leaderboard of the top market performers.' },
+        { label: 'Copy Trading', detail: 'Mirror top portfolios automatically with custom allocation limits.' },
+        { label: 'Insight Sharing', detail: 'Publish research notes and chart setups to build your following.' },
+        { label: 'Peer Chat', detail: 'Discuss breaking news and earnings releases with seasoned traders.' },
+      ],
+      metrics: [
+        { label: 'Verified Traders', val: '12,500+' },
+        { label: 'Ideas Shared Daily', val: '8,400+' },
+        { label: 'Top Trader Return', val: '+68.4% YTD' },
+      ],
+      targetRoute: '/community',
+      dashboardTab: 'social',
+    },
+    {
+      id: 'learning-academy',
+      title: 'NovaEq Learning Academy',
+      category: 'Education & Masterclasses',
+      badge: '60+ Masterclasses',
+      icon: BookOpen,
+      color: 'indigo',
+      description:
+        'Master the financial markets from fundamentals to advanced quantitative modeling. Enjoy interactive video masterclasses, downloadable cheatsheets, live market webinars, and interactive knowledge quizzes.',
+      highlights: [
+        'Structured learning paths: Beginner Investor, Technical Analyst, and Options Quant',
+        'Video masterclasses with full chapter progress tracking and completion certificates',
+        'Weekly live webinars with senior SEBI-registered research analysts',
+        'Comprehensive market blog with daily macro insights and actionable trade breakdowns',
+      ],
+      capabilities: [
+        { label: 'Interactive Player', detail: 'Video player with modular curriculum, notes, and speed controls.' },
+        { label: 'Live Webinars', detail: 'One-click registration for live analyst Q&A and trade breakdowns.' },
+        { label: 'Research Blog', detail: 'Publish your own articles or learn from top financial writers.' },
+        { label: 'Certifications', detail: 'Earn verified skill credentials upon passing module assessments.' },
+      ],
+      metrics: [
+        { label: 'Courses Available', val: '60+ Modules' },
+        { label: 'Active Students', val: '48,000+' },
+        { label: 'Live Webinars / Wk', val: '4 Sessions' },
+      ],
+      targetRoute: '/learn',
+      dashboardTab: 'portfolio',
+    },
+  ];
+
+  const workflowSteps: FeatureModalData[] = [
+    {
+      id: 'step-01',
+      title: 'Step 1: Instant Account Setup',
+      category: 'Getting Started',
+      badge: 'Under 2 Minutes',
+      icon: Shield,
+      color: 'blue',
+      description:
+        'Getting started on NovaEq is completely frictionless. Complete digital KYC in under 2 minutes with paperless verification, instant bank linking, and zero maintenance fees.',
+      highlights: [
+        '100% paperless digital verification compliant with industry security standards',
+        'Instant multi-bank link via UPI and secure net banking gateways',
+        'Free forever plan with full access to market feeds and basic AI signals',
+        'Complete encryption and enterprise-grade 256-bit security',
+      ],
+      capabilities: [
+        { label: 'Quick KYC', detail: 'Automated document verification with instant status approvals.' },
+        { label: 'Multi-Broker Link', detail: 'Connect your existing broker or trade directly through NovaEq.' },
+        { label: 'Zero Fees', detail: 'No hidden setup or annual maintenance charges.' },
+      ],
+      targetRoute: '/create-account',
+      dashboardTab: 'portfolio',
+    },
+    {
+      id: 'step-02',
+      title: 'Step 2: AI Risk Profiling',
+      category: 'Personalization',
+      badge: 'Dynamic Calibration',
+      icon: Brain,
+      color: 'emerald',
+      description:
+        'Tell NovaEq your goals, investment horizon, and comfort level with volatility. Our neural network tailors every market recommendation, stop-loss threshold, and asset allocation strategy specifically to your persona.',
+      highlights: [
+        'Calibrated risk scoring based on investment duration and capital requirements',
+        'Dynamic equity-to-debt asset allocation suggestions',
+        'Personalized risk-reward guardrails to prevent emotional over-leveraging',
+        'Update or adjust your risk parameters at any time from your settings',
+      ],
+      capabilities: [
+        { label: 'Horizon Matching', detail: 'Optimizes for intraday, swing, or multi-year wealth accumulation.' },
+        { label: 'Volatility Guard', detail: 'Sets strict drawdown caps to safeguard principal capital.' },
+        { label: 'Adaptive Model', detail: 'Learns from your historical trading style over time.' },
+      ],
+      targetRoute: '/ai-insights',
+      dashboardTab: 'portfolio',
+    },
+    {
+      id: 'step-03',
+      title: 'Step 3: Review Live High-Conviction Signals',
+      category: 'Market Execution',
+      badge: 'Actionable Intelligence',
+      icon: Zap,
+      color: 'amber',
+      description:
+        'Gain immediate access to verified BUY and SELL signals generated by our AI engine. Each recommendation comes with clear entry targets, multi-level profit goals, stop-loss bounds, and an explanation of the underlying catalyst.',
+      highlights: [
+        'Clear, unambiguous BUY / SELL / ACCUMULATE ratings with confidence percentages',
+        'Transparent technical and fundamental catalysts documented for every signal',
+        'Instant push and email notifications whenever high-probability setups trigger',
+        'Historical signal performance ledger showing full transparency and win rates',
+      ],
+      capabilities: [
+        { label: 'Target Projections', detail: 'Precise Target 1, Target 2, and Target 3 profit levels.' },
+        { label: 'Stop-Loss Triggers', detail: 'Hard stop-loss guidelines calculated using Average True Range (ATR).' },
+        { label: 'Catalyst Breakdown', detail: 'Summary of earnings momentum, volume spikes, or valuation gaps.' },
+      ],
+      targetRoute: '/ai-insights',
+      dashboardTab: 'markets',
+    },
+    {
+      id: 'step-04',
+      title: 'Step 4: Deploy & Auto-Invest',
+      category: 'Portfolio Scaling',
+      badge: 'One-Click Execution',
+      icon: BarChart2,
+      color: 'purple',
+      description:
+        'Execute trades with a single click or let NovaEq algorithmic bots manage your positions automatically with smart trailing orders, automated rebalancing, and disciplined profit-taking.',
+      highlights: [
+        'One-click multi-leg order execution directly from your dashboard',
+        'Automated algorithmic bot activation with predefined risk thresholds',
+        'Smart trailing profit stops that lock in gains as stocks climb',
+        'Comprehensive real-time P&L tracking with automated tax-ready reporting',
+      ],
+      capabilities: [
+        { label: 'Smart Execution', detail: 'Dispatches orders with zero slippage and optimal timing.' },
+        { label: 'Trailing Stops', detail: 'Locks in gains dynamically as the stock moves in your favor.' },
+        { label: 'P&L Analytics', detail: 'Live portfolio dashboard with interactive performance breakdown.' },
+      ],
+      targetRoute: '/markets',
+      dashboardTab: 'trading',
+    },
+  ];
+
+  const handleOpenFeatureModal = (feature: FeatureModalData) => {
+    setSelectedFeature(feature);
   };
 
-  const handleSignalClick = (_signal: AISignalCardData) => {
-    navigate('/ai-insights');
+  const handleOpenStepModal = (step: FeatureModalData) => {
+    setSelectedFeature(step);
+  };
+
+  const handleLaunchInDashboard = (tab?: string) => {
+    if (!isLoggedIn) {
+      openAuthModal('Access NovaEq Dashboard — sign in to manage your portfolio and trades.');
+      return;
+    }
+    const rolePath = currentUser?.role === 'trader' ? '/dashboard/trader' : '/dashboard/investor';
+    navigate(rolePath, { state: { activeTab: tab || 'overview' } });
+  };
+
+  const handleSignalClick = (signal: AISignalCardData) => {
+    setSelectedSignal(signal);
   };
 
   return (
@@ -361,127 +669,54 @@ const Home: React.FC = () => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <TiltCard
-            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
-            onClick={() => navigate('/ai-insights')}
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <Brain size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold text-white mb-2.5">AI-Powered Insights</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Machine learning models analyze 500+ data points per stock to surface high-conviction alpha opportunities.
-              </p>
-            </div>
-            <div className="pt-6 mt-auto">
-              <span className="text-xs font-semibold text-blue-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                Learn more &rarr;
-              </span>
-            </div>
-          </TiltCard>
+          {platformFeatures.map((feat) => {
+            const IconComp = feat.icon;
+            const colorBorder =
+              feat.color === 'blue'
+                ? 'border-blue-500/30 text-blue-400 bg-blue-500/15'
+                : feat.color === 'emerald'
+                ? 'border-emerald-500/30 text-emerald-400 bg-emerald-500/15'
+                : feat.color === 'amber'
+                ? 'border-amber-500/30 text-amber-400 bg-amber-500/15'
+                : feat.color === 'purple'
+                ? 'border-purple-500/30 text-purple-400 bg-purple-500/15'
+                : feat.color === 'cyan'
+                ? 'border-cyan-500/30 text-cyan-400 bg-cyan-500/15'
+                : 'border-indigo-500/30 text-indigo-400 bg-indigo-500/15';
 
-          <TiltCard
-            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
-            onClick={() => navigate('/learn')}
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <Zap size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold text-white mb-2.5">Algorithmic Trading</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Build, backtest, and deploy automated trading strategies with visual logic — zero coding required.
-              </p>
-            </div>
-            <div className="pt-6 mt-auto">
-              <span className="text-xs font-semibold text-emerald-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                Learn more &rarr;
-              </span>
-            </div>
-          </TiltCard>
-
-          <TiltCard
-            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
-            onClick={() => navigate('/markets')}
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <BarChart2 size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold text-white mb-2.5">Advanced Analytics</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                TradingView-grade charting with 80+ technical indicators, multi-timeframe heatmaps, and sector flow analysis.
-              </p>
-            </div>
-            <div className="pt-6 mt-auto">
-              <span className="text-xs font-semibold text-amber-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                Learn more &rarr;
-              </span>
-            </div>
-          </TiltCard>
-
-          <TiltCard
-            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
-            onClick={() => navigate('/markets')}
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <Shield size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold text-white mb-2.5">
-                Smart Risk Management
-              </h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Real-time portfolio risk scoring, VaR simulations, and automated drawdown alerts to keep capital protected.
-              </p>
-            </div>
-            <div className="pt-6 mt-auto">
-              <span className="text-xs font-semibold text-purple-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                Learn more &rarr;
-              </span>
-            </div>
-          </TiltCard>
-
-          <TiltCard
-            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
-            onClick={() => navigate('/community')}
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <Users size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold text-white mb-2.5">Social Investing</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                Follow top-ranked traders, automatically copy winning portfolios, and collaborate with 125K+ verified peers.
-              </p>
-            </div>
-            <div className="pt-6 mt-auto">
-              <span className="text-xs font-semibold text-cyan-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                Learn more &rarr;
-              </span>
-            </div>
-          </TiltCard>
-
-          <TiltCard
-            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
-            onClick={() => navigate('/learn')}
-          >
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
-                <BookOpen size={24} />
-              </div>
-              <h3 className="text-xl font-display font-bold text-white mb-2.5">Learning Academy</h3>
-              <p className="text-sm text-slate-400 leading-relaxed">
-                From market basics to options strategies and quant modeling — 60+ interactive courses with live progress tracking.
-              </p>
-            </div>
-            <div className="pt-6 mt-auto">
-              <span className="text-xs font-semibold text-indigo-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
-                Learn more &rarr;
-              </span>
-            </div>
-          </TiltCard>
+            return (
+              <TiltCard
+                key={feat.id}
+                className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
+                onClick={() => handleOpenFeatureModal(feat)}
+              >
+                <div>
+                  <div
+                    className={`w-12 h-12 rounded-xl border flex items-center justify-center mb-5 group-hover:scale-110 transition-transform ${colorBorder}`}
+                  >
+                    <IconComp size={24} />
+                  </div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[11px] font-mono font-semibold uppercase tracking-wider text-slate-400">
+                      {feat.category}
+                    </span>
+                  </div>
+                  <h3 className="text-xl font-display font-bold text-white mb-2.5">{feat.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed line-clamp-3">
+                    {feat.description}
+                  </p>
+                </div>
+                <div className="pt-6 mt-auto flex items-center justify-between border-t border-[#1c2a45]/60">
+                  <span className="text-xs font-semibold text-blue-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                    View Details & Features &rarr;
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#111e37] border border-[#1c2a45] text-slate-400">
+                    {feat.badge}
+                  </span>
+                </div>
+              </TiltCard>
+            );
+          })}
         </div>
       </section>
 
@@ -523,13 +758,23 @@ const Home: React.FC = () => {
               ))}
             </ul>
 
-            <button
-              onClick={() => navigate('/ai-insights')}
-              className="inline-flex items-center gap-2.5 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-sm py-3.5 px-7 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all"
-            >
-              <span>Explore AI Insights</span>
-              <ArrowRight size={16} />
-            </button>
+            <div className="flex flex-wrap gap-3">
+              <button
+                onClick={() => navigate('/ai-insights')}
+                className="inline-flex items-center gap-2.5 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-sm py-3.5 px-7 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all"
+              >
+                <span>Explore AI Insights</span>
+                <ArrowRight size={16} />
+              </button>
+
+              <button
+                onClick={() => handleLaunchInDashboard('portfolio')}
+                className="inline-flex items-center gap-2 bg-[#0f1c33]/80 hover:bg-[#14233e] text-slate-200 border border-[#1c2a45] font-semibold text-sm py-3.5 px-6 rounded-xl transition-all"
+              >
+                <span>Open in Dashboard</span>
+                <ExternalLink size={15} className="text-blue-400" />
+              </button>
+            </div>
           </div>
 
           {/* 3D Stack Deck Carousel */}
@@ -551,40 +796,34 @@ const Home: React.FC = () => {
               First Trade
             </span>
           </h2>
+          <p className="text-slate-400 text-sm mt-3">Click on any step below to see detailed workflow instructions and dashboard actions.</p>
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            {
-              step: '01',
-              title: 'Open Your Account',
-              desc: 'Seamless digital KYC in under 2 minutes with instant verification and paperless setup.',
-            },
-            {
-              step: '02',
-              title: 'Set Your Risk Profile',
-              desc: 'AI calibrates your investment horizon and targets to structure an optimal asset allocation.',
-            },
-            {
-              step: '03',
-              title: 'Review Live Signals',
-              desc: 'Actionable BUY/SELL recommendations paired with transparent confidence scores and catalysts.',
-            },
-            {
-              step: '04',
-              title: 'Deploy & Auto-Invest',
-              desc: 'Execute trades with 1-click or activate automated algorithmic strategies with smart triggers.',
-            },
-          ].map((item) => (
+          {workflowSteps.map((step) => (
             <div
-              key={item.step}
-              className="border border-[#1c2a45] bg-gradient-to-b from-[#111e37]/80 to-[#0a1224]/70 rounded-2xl p-6 transition-all hover:-translate-y-1 hover:border-blue-500/40"
+              key={step.id}
+              onClick={() => handleOpenStepModal(step)}
+              className="border border-[#1c2a45] bg-gradient-to-b from-[#111e37]/80 to-[#0a1224]/70 rounded-2xl p-6 transition-all hover:-translate-y-1 hover:border-blue-500/40 cursor-pointer group flex flex-col justify-between"
             >
-              <span className="font-mono text-sm text-blue-400 font-semibold block mb-3">
-                {item.step}
-              </span>
-              <h3 className="font-display font-bold text-base text-white mb-2">{item.title}</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">{item.desc}</p>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-mono text-sm text-blue-400 font-semibold">
+                    {step.title.split(':')[0]}
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-blue-500/10 border border-blue-500/30 text-blue-300">
+                    {step.badge}
+                  </span>
+                </div>
+                <h3 className="font-display font-bold text-base text-white mb-2 group-hover:text-blue-300 transition-colors">
+                  {step.title.split(': ')[1]}
+                </h3>
+                <p className="text-xs text-slate-400 leading-relaxed line-clamp-3 mb-4">{step.description}</p>
+              </div>
+              <div className="pt-3 border-t border-[#1c2a45]/60 flex items-center justify-between text-xs text-blue-400 font-medium group-hover:translate-x-0.5 transition-transform">
+                <span>View Details</span>
+                <ChevronRight size={14} />
+              </div>
             </div>
           ))}
         </div>
@@ -634,7 +873,8 @@ const Home: React.FC = () => {
           ].map((item) => (
             <figure
               key={item.author}
-              className="border border-[#1c2a45] bg-[#14233e]/50 backdrop-blur-md rounded-2xl p-6 flex flex-col justify-between"
+              className="border border-[#1c2a45] bg-[#14233e]/50 backdrop-blur-md rounded-2xl p-6 flex flex-col justify-between hover:border-blue-500/30 transition-all cursor-pointer"
+              onClick={() => navigate('/community')}
             >
               <blockquote className="text-sm text-slate-300 leading-relaxed italic mb-6">
                 {item.quote}
@@ -683,6 +923,276 @@ const Home: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* ========================================================================= */}
+      {/* FEATURE & WORKFLOW SHOWCASE MODAL                                         */}
+      {/* ========================================================================= */}
+      {selectedFeature && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div
+            className="relative w-full max-w-2xl bg-[#0b1428] border border-[#1c2a45] rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col max-h-[90vh]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="p-6 sm:p-8 bg-gradient-to-b from-[#12203d] to-[#0b1428] border-b border-[#1c2a45] relative">
+              <button
+                onClick={() => setSelectedFeature(null)}
+                className="absolute top-5 right-5 w-9 h-9 rounded-full bg-[#1c2a45]/80 hover:bg-[#2a3c61] text-slate-300 flex items-center justify-center transition-colors"
+                title="Close"
+              >
+                <X size={18} />
+              </button>
+
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-blue-400 bg-blue-500/10 px-2.5 py-1 rounded-full border border-blue-500/25">
+                  {selectedFeature.category}
+                </span>
+                <span className="text-xs font-mono text-slate-400 bg-slate-800/50 px-2.5 py-1 rounded-full border border-slate-700/40">
+                  {selectedFeature.badge}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-4 mt-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-blue-500/20 to-emerald-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 flex-shrink-0">
+                  <selectedFeature.icon size={26} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-display font-bold text-white">
+                    {selectedFeature.title}
+                  </h3>
+                  <p className="text-xs text-slate-400 mt-0.5">NovaEq Core Intelligence Suite</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 sm:p-8 overflow-y-auto space-y-6">
+              {/* Detailed Explanation */}
+              <div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2">
+                  Feature Overview
+                </h4>
+                <p className="text-sm text-slate-200 leading-relaxed">
+                  {selectedFeature.description}
+                </p>
+              </div>
+
+              {/* Metrics if available */}
+              {selectedFeature.metrics && (
+                <div className="grid grid-cols-3 gap-3">
+                  {selectedFeature.metrics.map((m, i) => (
+                    <div
+                      key={i}
+                      className="p-3 rounded-xl bg-[#0f1c33] border border-[#1c2a45] text-center"
+                    >
+                      <span className="text-[11px] text-slate-400 block mb-0.5">{m.label}</span>
+                      <b className="text-sm font-display font-bold text-emerald-400">{m.val}</b>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Key Capabilities Grid */}
+              <div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-3">
+                  Key Capabilities
+                </h4>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {selectedFeature.capabilities.map((cap, i) => (
+                    <div
+                      key={i}
+                      className="p-3.5 rounded-xl bg-[#0f1c33]/70 border border-[#1c2a45] flex items-start gap-2.5"
+                    >
+                      <span className="w-5 h-5 rounded-md bg-blue-500/15 border border-blue-500/30 flex items-center justify-center flex-shrink-0 mt-0.5">
+                        <Check size={12} className="text-blue-400" />
+                      </span>
+                      <div>
+                        <b className="text-xs font-semibold text-slate-200 block mb-0.5">
+                          {cap.label}
+                        </b>
+                        <span className="text-xs text-slate-400 leading-normal">{cap.detail}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Highlights Checklist */}
+              <div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-2.5">
+                  Platform Advantages
+                </h4>
+                <ul className="space-y-2">
+                  {selectedFeature.highlights.map((h, i) => (
+                    <li key={i} className="flex items-start gap-2.5 text-xs text-slate-300">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mt-1.5 flex-shrink-0" />
+                      <span>{h}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+
+            {/* Modal Footer with Actions */}
+            <div className="p-5 sm:p-6 bg-[#080e1c] border-t border-[#1c2a45] flex flex-wrap items-center justify-between gap-3">
+              <button
+                onClick={() => setSelectedFeature(null)}
+                className="px-5 py-2.5 rounded-xl border border-[#1c2a45] text-slate-400 hover:text-white hover:bg-slate-800/40 text-sm font-medium transition-colors"
+              >
+                Close
+              </button>
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => {
+                    const target = selectedFeature.targetRoute;
+                    setSelectedFeature(null);
+                    navigate(target);
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-sm font-semibold transition-all"
+                >
+                  <span>Explore {selectedFeature.title.split(' ')[0]} Page</span>
+                  <ArrowRight size={15} />
+                </button>
+
+                <button
+                  onClick={() => {
+                    const tab = selectedFeature.dashboardTab;
+                    setSelectedFeature(null);
+                    handleLaunchInDashboard(tab);
+                  }}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-sm font-semibold shadow-lg shadow-blue-500/25 transition-all"
+                >
+                  <span>Go to Dashboard</span>
+                  <ExternalLink size={15} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* AI SIGNAL CARD SHOWCASE MODAL                                             */}
+      {/* ========================================================================= */}
+      {selectedSignal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
+          <div
+            className="relative w-full max-w-lg bg-[#0b1428] border border-[#1c2a45] rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="p-6 bg-gradient-to-b from-[#12203d] to-[#0b1428] border-b border-[#1c2a45] relative">
+              <button
+                onClick={() => setSelectedSignal(null)}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#1c2a45]/80 hover:bg-[#2a3c61] text-slate-300 flex items-center justify-center transition-colors"
+              >
+                <X size={16} />
+              </button>
+
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/25">
+                  Live AI Trade Setup
+                </span>
+                <span className="text-xs font-mono text-slate-400">
+                  Confidence: <strong className="text-emerald-400">{selectedSignal.confidence}%</strong>
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between mt-2">
+                <div>
+                  <h3 className="text-2xl font-display font-bold text-white">
+                    {selectedSignal.symbol}
+                  </h3>
+                  <p className="text-xs text-slate-400">{selectedSignal.name}</p>
+                </div>
+                <div className="text-right">
+                  <span
+                    className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${
+                      selectedSignal.action === 'BUY' || selectedSignal.action === 'STRONG BUY'
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
+                    }`}
+                  >
+                    {selectedSignal.action}
+                  </span>
+                  <span className="block font-mono text-sm font-bold text-white mt-1">
+                    ${selectedSignal.price.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 space-y-4">
+              <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-[#0f1c33] border border-[#1c2a45] text-center">
+                <div>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">Entry Range</span>
+                  <b className="font-mono text-xs text-slate-200">
+                    ${(selectedSignal.price * 0.995).toFixed(2)} - ${selectedSignal.price.toFixed(2)}
+                  </b>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">Target</span>
+                  <b className="font-mono text-xs text-emerald-400">
+                    ${selectedSignal.target.toFixed(2)}
+                  </b>
+                </div>
+                <div>
+                  <span className="text-[11px] text-slate-400 block mb-0.5">Stop Loss</span>
+                  <b className="font-mono text-xs text-rose-400">
+                    ${selectedSignal.stopLoss.toFixed(2)}
+                  </b>
+                </div>
+              </div>
+
+              <div>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+                  AI Model Thesis & Catalyst
+                </h4>
+                <p className="text-xs text-slate-300 leading-relaxed bg-[#0f1c33]/50 p-3.5 rounded-xl border border-[#1c2a45]">
+                  {selectedSignal.catalyst}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+                <span>Timeframe: <strong>{selectedSignal.timeframe}</strong></span>
+                <span>Signal ID: <strong className="font-mono">{selectedSignal.id}</strong></span>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-5 bg-[#080e1c] border-t border-[#1c2a45] flex items-center justify-between gap-3">
+              <button
+                onClick={() => setSelectedSignal(null)}
+                className="px-4 py-2 rounded-xl border border-[#1c2a45] text-slate-400 hover:text-white text-xs font-medium"
+              >
+                Close
+              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    setSelectedSignal(null);
+                    navigate('/ai-insights');
+                  }}
+                  className="px-4 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-xs font-semibold"
+                >
+                  Explore AI Insights
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedSignal(null);
+                    handleLaunchInDashboard('trading');
+                  }}
+                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-semibold shadow-md"
+                >
+                  Trade in Dashboard
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
