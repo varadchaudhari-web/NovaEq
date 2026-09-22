@@ -101,11 +101,15 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeTab, 
         'flex items-center px-4 py-4 border-b border-nova-border',
         collapsed ? 'justify-center' : 'justify-between'
       )}>
-        {!collapsed && <Logo size="sm" />}
+        {!collapsed && (
+          <button onClick={() => navigate('/')} className="hover:opacity-90 transition-opacity text-left" title="NovaEq Home">
+            <Logo size="sm" />
+          </button>
+        )}
         {collapsed && (
-          <div className="w-8 h-8 rounded-lg bg-nova-primary flex items-center justify-center">
+          <button onClick={() => navigate('/')} className="w-8 h-8 rounded-lg bg-nova-primary flex items-center justify-center hover:opacity-90 transition-opacity" title="Back to Website">
             <TrendingUp size={16} className="text-white" />
-          </div>
+          </button>
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
@@ -190,8 +194,20 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeTab, 
         })}
       </nav>
 
-      {/* Bottom */}
-      <div className="px-3 py-3 border-t border-nova-border">
+      {/* Bottom Actions: Back to Website & Sign Out */}
+      <div className="px-3 py-3 border-t border-nova-border space-y-1">
+        <button
+          onClick={() => navigate('/')}
+          className={cn(
+            'sidebar-nav-item w-full text-nova-text-muted hover:text-nova-text hover:bg-nova-surface2 group',
+            collapsed && 'justify-center px-2'
+          )}
+          title={collapsed ? 'Back to Website' : undefined}
+        >
+          <Globe size={18} className="text-nova-primary-light flex-shrink-0 group-hover:scale-110 transition-transform" />
+          {!collapsed && <span>Back to Website</span>}
+        </button>
+
         <button
           onClick={handleLogout}
           className={cn(
@@ -235,7 +251,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeTab, 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="h-14 border-b border-nova-border bg-nova-secondary/50 flex items-center px-4 gap-4 flex-shrink-0">
+        <header className="h-14 border-b border-nova-border bg-nova-secondary/50 flex items-center px-4 gap-3 sm:gap-4 flex-shrink-0">
           <button
             className="lg:hidden nova-btn-ghost p-2"
             onClick={() => setSidebarOpen(true)}
@@ -244,17 +260,28 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeTab, 
           </button>
 
           {/* Page title */}
-          <div className="flex-1">
-            <h1 className="text-sm font-semibold text-nova-text capitalize">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-sm font-semibold text-nova-text capitalize truncate">
               {navItems.find(i => i.id === activeTab)?.label || 'Dashboard'}
             </h1>
           </div>
 
-          {/* Quick actions */}
-          <div className="flex items-center gap-2">
+          {/* Quick actions & Back to Website */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => navigate('/')}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-nova-border hover:border-nova-primary/50 bg-nova-surface hover:bg-nova-surface2 text-nova-text-muted hover:text-nova-text text-xs font-semibold transition-all shadow-sm group"
+              title="Exit Dashboard and Return to Website"
+            >
+              <Globe size={14} className="text-nova-primary-light group-hover:rotate-12 transition-transform" />
+              <span className="hidden sm:inline">Back to Website</span>
+              <span className="sm:hidden">Website</span>
+            </button>
+
             <button
               onClick={() => onTabChange('alerts')}
               className="relative nova-btn-ghost p-2"
+              title="Alerts"
             >
               <Bell size={18} />
               {unreadAlerts > 0 && (
@@ -264,8 +291,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeTab, 
               )}
             </button>
             <div
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-2 cursor-pointer p-1 rounded-lg hover:bg-nova-surface2 transition-colors"
               onClick={() => onTabChange('settings')}
+              title="Profile Settings"
             >
               <img
                 src={currentUser?.avatar}

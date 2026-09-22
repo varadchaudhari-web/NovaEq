@@ -78,8 +78,8 @@ const Home: React.FC = () => {
     }
   };
 
-  const handleSignalClick = (signal: AISignalCardData) => {
-    handleProtectedAction(`View detailed AI analysis and signal breakdown for ${signal.symbol}.`);
+  const handleSignalClick = (_signal: AISignalCardData) => {
+    navigate('/ai-insights');
   };
 
   return (
@@ -362,99 +362,125 @@ const Home: React.FC = () => {
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <TiltCard
-            onClick={() =>
-              handleProtectedAction('Access AI-Powered Insights — sign in to NovaEq.')
-            }
+            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
+            onClick={() => navigate('/ai-insights')}
           >
-            <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center mb-5">
-              <Brain size={24} />
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-blue-500/15 border border-blue-500/30 text-blue-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <Brain size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold text-white mb-2.5">AI-Powered Insights</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Machine learning models analyze 500+ data points per stock to surface high-conviction alpha opportunities.
+              </p>
             </div>
-            <h3 className="text-lg font-display font-bold text-white mb-2">AI-Powered Insights</h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              Machine learning models analyze 500+ data points per stock to surface high-conviction alpha opportunities.
-            </p>
-            <span className="text-xs font-semibold text-blue-400 inline-flex items-center gap-1">
-              Learn more &rarr;
-            </span>
+            <div className="pt-6 mt-auto">
+              <span className="text-xs font-semibold text-blue-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                Learn more &rarr;
+              </span>
+            </div>
           </TiltCard>
 
           <TiltCard
-            onClick={() =>
-              handleProtectedAction('Explore Algorithmic Trading — sign in to NovaEq.')
-            }
+            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
+            onClick={() => navigate('/learn')}
           >
-            <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-5">
-              <Zap size={24} />
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <Zap size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold text-white mb-2.5">Algorithmic Trading</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Build, backtest, and deploy automated trading strategies with visual logic — zero coding required.
+              </p>
             </div>
-            <h3 className="text-lg font-display font-bold text-white mb-2">Algorithmic Trading</h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              Build, backtest, and deploy automated trading strategies with visual logic — zero coding required.
-            </p>
-            <span className="text-xs font-semibold text-emerald-400 inline-flex items-center gap-1">
-              Learn more &rarr;
-            </span>
+            <div className="pt-6 mt-auto">
+              <span className="text-xs font-semibold text-emerald-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                Learn more &rarr;
+              </span>
+            </div>
           </TiltCard>
 
           <TiltCard
-            onClick={() => handleProtectedAction('View Advanced Analytics — sign in to NovaEq.')}
+            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
+            onClick={() => navigate('/markets')}
           >
-            <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mb-5">
-              <BarChart2 size={24} />
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <BarChart2 size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold text-white mb-2.5">Advanced Analytics</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                TradingView-grade charting with 80+ technical indicators, multi-timeframe heatmaps, and sector flow analysis.
+              </p>
             </div>
-            <h3 className="text-lg font-display font-bold text-white mb-2">Advanced Analytics</h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              TradingView-grade charting with 80+ technical indicators, multi-timeframe heatmaps, and sector flow analysis.
-            </p>
-            <span className="text-xs font-semibold text-amber-400 inline-flex items-center gap-1">
-              Learn more &rarr;
-            </span>
+            <div className="pt-6 mt-auto">
+              <span className="text-xs font-semibold text-amber-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                Learn more &rarr;
+              </span>
+            </div>
           </TiltCard>
 
           <TiltCard
-            onClick={() => handleProtectedAction('Explore Smart Risk Tools — sign in to NovaEq.')}
+            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
+            onClick={() => navigate('/markets')}
           >
-            <div className="w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center mb-5">
-              <Shield size={24} />
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-purple-500/15 border border-purple-500/30 text-purple-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <Shield size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold text-white mb-2.5">
+                Smart Risk Management
+              </h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Real-time portfolio risk scoring, VaR simulations, and automated drawdown alerts to keep capital protected.
+              </p>
             </div>
-            <h3 className="text-lg font-display font-bold text-white mb-2">
-              Smart Risk Management
-            </h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              Real-time portfolio risk scoring, VaR simulations, and automated drawdown alerts to keep capital protected.
-            </p>
-            <span className="text-xs font-semibold text-purple-400 inline-flex items-center gap-1">
-              Learn more &rarr;
-            </span>
+            <div className="pt-6 mt-auto">
+              <span className="text-xs font-semibold text-purple-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                Learn more &rarr;
+              </span>
+            </div>
           </TiltCard>
 
           <TiltCard
-            onClick={() => handleProtectedAction('Join Social Investing — sign in to NovaEq.')}
+            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
+            onClick={() => navigate('/community')}
           >
-            <div className="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mb-5">
-              <Users size={24} />
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/15 border border-cyan-500/30 text-cyan-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <Users size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold text-white mb-2.5">Social Investing</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Follow top-ranked traders, automatically copy winning portfolios, and collaborate with 125K+ verified peers.
+              </p>
             </div>
-            <h3 className="text-lg font-display font-bold text-white mb-2">Social Investing</h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              Follow top-ranked traders, automatically copy winning portfolios, and collaborate with 125K+ verified peers.
-            </p>
-            <span className="text-xs font-semibold text-cyan-400 inline-flex items-center gap-1">
-              Learn more &rarr;
-            </span>
+            <div className="pt-6 mt-auto">
+              <span className="text-xs font-semibold text-cyan-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                Learn more &rarr;
+              </span>
+            </div>
           </TiltCard>
 
           <TiltCard
-            onClick={() => handleProtectedAction('Access Learning Academy — sign in to NovaEq.')}
+            className="p-8 sm:p-9 flex flex-col justify-between min-h-[300px] h-full transition-all group cursor-pointer"
+            onClick={() => navigate('/learn')}
           >
-            <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mb-5">
-              <BookOpen size={24} />
+            <div>
+              <div className="w-12 h-12 rounded-xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform">
+                <BookOpen size={24} />
+              </div>
+              <h3 className="text-xl font-display font-bold text-white mb-2.5">Learning Academy</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                From market basics to options strategies and quant modeling — 60+ interactive courses with live progress tracking.
+              </p>
             </div>
-            <h3 className="text-lg font-display font-bold text-white mb-2">Learning Academy</h3>
-            <p className="text-sm text-slate-400 leading-relaxed mb-4">
-              From market basics to options strategies and quant modeling — 60+ interactive courses with live progress tracking.
-            </p>
-            <span className="text-xs font-semibold text-indigo-400 inline-flex items-center gap-1">
-              Learn more &rarr;
-            </span>
+            <div className="pt-6 mt-auto">
+              <span className="text-xs font-semibold text-indigo-400 inline-flex items-center gap-1.5 group-hover:translate-x-1 transition-transform">
+                Learn more &rarr;
+              </span>
+            </div>
           </TiltCard>
         </div>
       </section>
@@ -498,12 +524,8 @@ const Home: React.FC = () => {
             </ul>
 
             <button
-              onClick={() =>
-                handleProtectedAction(
-                  'Explore AI Insights Engine — create your free account on NovaEq.'
-                )
-              }
-              className="inline-flex items-center gap-2.5 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-sm py-3.5 px-7 rounded-xl shadow-lg shadow-blue-500/25 transition-all"
+              onClick={() => navigate('/ai-insights')}
+              className="inline-flex items-center gap-2.5 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold text-sm py-3.5 px-7 rounded-xl shadow-lg shadow-blue-500/25 hover:shadow-blue-500/40 hover:-translate-y-0.5 transition-all"
             >
               <span>Explore AI Insights</span>
               <ArrowRight size={16} />
