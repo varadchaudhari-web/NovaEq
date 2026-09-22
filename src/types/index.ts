@@ -244,6 +244,30 @@ export interface SubscriptionPlanData {
   isPopular: boolean;
 }
 
+export interface FinancialGoal {
+  id: string;
+  userId: string;
+  name: string;
+  category: 'retirement' | 'wealth' | 'house' | 'education' | 'emergency' | 'vacation';
+  targetAmount: number;
+  currentAmount: number;
+  targetYear: number;
+  monthlyContribution: number;
+  createdAt: string;
+}
+
+export interface SIPPlan {
+  id: string;
+  fundId: string;
+  fundName: string;
+  amount: number;
+  frequency: 'daily' | 'weekly' | 'monthly';
+  nextDebitDate: string;
+  status: 'active' | 'paused' | 'cancelled';
+  totalInvested: number;
+  installmentsPaid: number;
+}
+
 export interface AppState {
   currentUser: User | null;
   isLoggedIn: boolean;
@@ -263,8 +287,11 @@ export interface AppState {
   kycApplications: KYCApplication[];
   subscriptionPlans: SubscriptionPlanData[];
   watchlist: string[];
+  financialGoals: FinancialGoal[];
+  sipPlans: SIPPlan[];
   sidebarActive: string;
   authModalOpen: boolean;
   authModalReason: string;
   notifications: Alert[];
 }
+

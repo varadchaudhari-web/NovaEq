@@ -8,20 +8,33 @@ import { formatCurrency, formatPercent, formatTimeAgo, getActionBadge, cn } from
 import type { RecommendationRisk } from '@/types';
 
 const AdvisorDashboard: React.FC = () => {
-  const { currentUser, recommendations, strategies, communityPosts, holdings, walletBalance, alerts, markAlertRead, addRecommendation, marketStocks } = useAppStore();
+  const {
+    currentUser,
+    recommendations,
+    strategies,
+    communityPosts,
+    holdings,
+    walletBalance,
+    alerts,
+    markAlertRead,
+    addRecommendation,
+    deleteRecommendation,
+    addCommunityPost,
+    marketStocks
+  } = useAppStore();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState((location.state as { activeTab?: string } | null)?.activeTab || 'overview');
   const [showNewRec, setShowNewRec] = useState(false);
   const [newRec, setNewRec] = useState({ symbol: '', action: 'buy', targetPrice: '', risk: 'medium', rationale: '', timeHorizon: '6 months' });
 
-  const totalAUM = 1250000;
+  const totalAUM = 12500000;
   const clientCount = 40;
   const myRecs = recommendations.filter(r => r.advisorId === currentUser?.id);
   const publicStrategies = strategies.filter(s => s.isPublic);
 
   const growthData = Array.from({ length: 30 }, (_, i) => {
     const d = new Date(); d.setDate(d.getDate() - (29 - i));
-    return { date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), value: Math.round(1180000 + i * 2300 + Math.random() * 5000 - 2000) };
+    return { date: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), value: Math.round(11800000 + i * 23000 + Math.random() * 50000 - 20000) };
   });
 
   const handlePublishRecommendation = () => {
@@ -42,10 +55,19 @@ const AdvisorDashboard: React.FC = () => {
       sector: marketStocks.find(stock => stock.symbol === symbol)?.sector || 'General',
       timeHorizon: newRec.timeHorizon,
     });
+
+    // Also broadcast as an analyst idea to community
+    addCommunityPost(
+      `[ANALYST SETUP] ${newRec.action.toUpperCase()} ${symbol} | Target: ₹${targetPrice} | Horizon: ${newRec.timeHorizon}\n\n${newRec.rationale.trim()}`,
+      symbol,
+      newRec.action === 'buy' ? 'bullish' : newRec.action === 'sell' ? 'bearish' : 'neutral'
+    );
+
     setShowNewRec(false);
     setNewRec({ symbol: '', action: 'buy', targetPrice: '', risk: 'medium', rationale: '', timeHorizon: '6 months' });
     setActiveTab('recommendations');
   };
+
 
   return (
     <DashboardLayout activeTab={activeTab} onTabChange={setActiveTab}>
@@ -157,10 +179,19 @@ const AdvisorDashboard: React.FC = () => {
                 <div className="text-right"><p className={`text-lg font-bold ${rec.upside >= 0 ? 'text-nova-green' : 'text-nova-red'}`}>{rec.upside >= 0 ? '+' : ''}{rec.upside.toFixed(1)}%</p><p className="text-xs text-nova-text-muted">Target: ${rec.targetPrice}</p></div>
               </div>
               <p className="text-xs text-nova-text-muted mb-3">{rec.rationale}</p>
-              <div className="flex gap-4 text-xs text-nova-text-muted">
-                <span>{rec.followers.toLocaleString()} followers</span><span>·</span><span>{rec.timeHorizon}</span><span>·</span><span>{formatTimeAgo(rec.publishedAt)}</span>
+              <div className="flex items-center justify-between text-xs text-nova-text-muted pt-2 border-t border-nova-border/60">
+                <div className="flex gap-4">
+                  <span>{rec.followers.toLocaleString()} followers</span><span>·</span><span>{rec.timeHorizon}</span><span>·</span><span>{formatTimeAgo(rec.publishedAt)}</span>
+                </div>
+                <button
+                  onClick={() => deleteRecommendation(rec.id)}
+                  className="text-xs text-rose-400 hover:text-rose-300 font-medium"
+                >
+                  Delete
+                </button>
               </div>
             </div>
+
           ))}
         </div>
       )}

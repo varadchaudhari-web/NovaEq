@@ -25,10 +25,12 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'portfolio', label: 'Portfolio', icon: PieChart, section: 'main' },
     { id: 'markets', label: 'Markets', icon: TrendingUp, section: 'main' },
     { id: 'watchlist', label: 'Watchlist', icon: Star, section: 'main' },
+    { id: 'goals', label: 'Financial Goals', icon: Target, section: 'wealth' },
+    { id: 'mutual-funds', label: 'Mutual Funds & SIPs', icon: PieChart, section: 'wealth' },
     { id: 'ai-insights', label: 'AI Insights', icon: Brain, section: 'tools' },
     { id: 'community', label: 'Community', icon: Users, section: 'social' },
     { id: 'learning', label: 'Learn', icon: BookOpen, section: 'resources' },
-    { id: 'wallet', label: 'Wallet', icon: Wallet, section: 'resources' },
+    { id: 'wallet', label: 'Wallet & Banking', icon: Wallet, section: 'resources' },
     { id: 'reports', label: 'Reports', icon: FileText, section: 'resources' },
     { id: 'settings', label: 'Profile', icon: Settings, section: 'account' },
   ],
@@ -40,7 +42,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'orders', label: 'Orders', icon: Activity, section: 'tools' },
     { id: 'charts', label: 'Analytics', icon: BarChart2, section: 'tools' },
     { id: 'alerts', label: 'Alerts', icon: Bell, section: 'social' },
-    { id: 'wallet', label: 'Wallet', icon: Wallet, section: 'resources' },
+    { id: 'wallet', label: 'Wallet & Banking', icon: Wallet, section: 'resources' },
   ],
   advisor: [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, section: 'main' },
@@ -53,23 +55,29 @@ const navByRole: Record<UserRole, NavItem[]> = {
   admin: [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, section: 'main' },
     { id: 'users', label: 'Users', icon: Users, section: 'main' },
-    { id: 'kyc', label: 'KYC', icon: UserCheck, section: 'main', badge: 3 },
-    { id: 'compliance', label: 'Compliance', icon: Shield, section: 'main' },
-    { id: 'revenue', label: 'Revenue', icon: TrendingUp, section: 'monitoring' },
+    { id: 'kyc', label: 'KYC Desk', icon: UserCheck, section: 'compliance', badge: 3 },
+    { id: 'trades', label: 'Trade Surveillance', icon: Activity, section: 'compliance' },
+    { id: 'algo', label: 'Strategies Oversight', icon: Zap, section: 'compliance' },
+    { id: 'compliance', label: 'Regulations', icon: Shield, section: 'compliance' },
+    { id: 'revenue', label: 'Revenue & Plans', icon: TrendingUp, section: 'monitoring' },
     { id: 'audit', label: 'Audit Logs', icon: FileText, section: 'system' },
     { id: 'settings', label: 'Settings', icon: Settings, section: 'system' },
   ],
 };
 
+
 const sectionLabels: Record<string, string> = {
   main: 'Main',
-  tools: 'Tools',
-  social: 'Social',
-  resources: 'Resources',
+  wealth: 'Wealth & Goals',
+  tools: 'Tools & Analytics',
+  social: 'Social & Feed',
+  resources: 'Banking & Resources',
+  compliance: 'Surveillance & Compliance',
   account: 'Account',
-  monitoring: 'Monitoring',
-  system: 'System',
+  monitoring: 'Financials',
+  system: 'Administration',
 };
+
 
 interface DashboardLayoutProps {
   children: React.ReactNode;

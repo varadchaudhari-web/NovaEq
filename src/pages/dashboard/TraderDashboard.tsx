@@ -28,6 +28,8 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAppStore } from '@/stores/useAppStore';
 import { formatCurrency, formatPercent, formatTimeAgo, cn, getStatusBadge } from '@/lib/utils';
 import { mockMarketStocks } from '@/lib/mockData';
+import DepositModal from '@/components/wallet/DepositModal';
+import WithdrawalModal from '@/components/wallet/WithdrawalModal';
 import type { Strategy, Order, Holding } from '@/types';
 
 const TraderDashboard: React.FC = () => {
@@ -58,6 +60,8 @@ const TraderDashboard: React.FC = () => {
 
   // Toast Notification State
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
+  const [showDepositModal, setShowDepositModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
 
   const showToast = (text: string, type: 'success' | 'error' | 'info' = 'success') => {
     setToastMessage({ text, type });
@@ -1123,31 +1127,35 @@ const TraderDashboard: React.FC = () => {
       {/* WALLET TAB */}
       {activeTab === 'wallet' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Trader Margin Wallet</h2>
-          <div className="nova-card p-6 bg-gradient-to-br from-nova-primary/10 to-nova-accent/5 border-nova-primary/20">
-            <p className="text-nova-text-muted text-sm mb-1">Available Margin Balance</p>
-            <p className="text-4xl font-black text-nova-text">{formatCurrency(walletBalance)}</p>
+          <div className="flex items-center justify-between">
+            <h2 className="nova-section-title">Trader Margin Wallet & Payouts</h2>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setShowDepositModal(true)}
+                className="nova-btn-accent text-xs py-2 px-4 font-bold"
+              >
+                + Add Margin (Razorpay)
+              </button>
+              <button
+                onClick={() => setShowWithdrawModal(true)}
+                className="nova-btn-outline text-xs py-2 px-4"
+              >
+                Instant Bank Payout
+              </button>
+            </div>
+          </div>
+          <div className="nova-card p-6 bg-gradient-to-br from-slate-900 via-indigo-950/40 to-slate-900 border border-nova-border/80">
+            <p className="text-nova-text-muted text-xs mb-1 uppercase tracking-wider">Available Trading Margin Balance</p>
+            <p className="text-4xl font-mono font-black text-nova-text">{formatCurrency(walletBalance)}</p>
             <div className="flex gap-3 mt-5">
               <button
-                onClick={() => {
-                  const amt = Number(prompt('Deposit Margin Amount ($):', '5000'));
-                  if (amt > 0) {
-                    useAppStore.getState().deposit(amt, 'Bank Wire');
-                    showToast(`Deposited ${formatCurrency(amt)} into trading wallet!`, 'success');
-                  }
-                }}
-                className="nova-btn-accent text-sm py-2.5 px-6"
+                onClick={() => setShowDepositModal(true)}
+                className="nova-btn-accent text-sm py-2.5 px-6 font-bold"
               >
                 + Deposit Margin
               </button>
               <button
-                onClick={() => {
-                  const amt = Number(prompt('Withdraw Margin Amount ($):', '1000'));
-                  if (amt > 0) {
-                    useAppStore.getState().withdraw(amt);
-                    showToast(`Withdrawn ${formatCurrency(amt)} to bank.`, 'info');
-                  }
-                }}
+                onClick={() => setShowWithdrawModal(true)}
                 className="nova-btn-outline text-sm py-2.5 px-6"
               >
                 Withdraw Funds
@@ -1472,6 +1480,10 @@ const TraderDashboard: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Shared Modals */}
+      <DepositModal isOpen={showDepositModal} onClose={() => setShowDepositModal(false)} />
+      <WithdrawalModal isOpen={showWithdrawModal} onClose={() => setShowWithdrawModal(false)} />
     </DashboardLayout>
   );
 };

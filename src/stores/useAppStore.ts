@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
   AppState, User, Alert, CommunityPost, Strategy, Recommendation,
-  KYCApplication, KYCStatus, SubscriptionPlan, Order
+  KYCApplication, KYCStatus, SubscriptionPlan, Order, FinancialGoal, SIPPlan, Holding
 } from '@/types';
 import {
   mockUsers, mockHoldings, mockOrders, mockStrategies,
@@ -10,6 +10,78 @@ import {
   mockLeaderboard, mockMarketStocks, mockWalletTransactions,
   mockMutualFunds, mockCourses, mockKYCApplications, mockSubscriptionPlans
 } from '@/lib/mockData';
+
+const mockInitialGoals: FinancialGoal[] = [
+  {
+    id: 'goal-1',
+    userId: 'u001',
+    name: 'Early Retirement Fund',
+    category: 'retirement',
+    targetAmount: 25000000,
+    currentAmount: 8450000,
+    targetYear: 2038,
+    monthlyContribution: 45000,
+    createdAt: '2024-01-15'
+  },
+  {
+    id: 'goal-2',
+    userId: 'u001',
+    name: 'Dream Luxury Home (BKC)',
+    category: 'house',
+    targetAmount: 18000000,
+    currentAmount: 5200000,
+    targetYear: 2029,
+    monthlyContribution: 60000,
+    createdAt: '2024-02-10'
+  },
+  {
+    id: 'goal-3',
+    userId: 'u001',
+    name: 'Higher Education Fund',
+    category: 'education',
+    targetAmount: 6000000,
+    currentAmount: 2800000,
+    targetYear: 2032,
+    monthlyContribution: 25000,
+    createdAt: '2024-03-01'
+  }
+];
+
+const mockInitialSIPs: SIPPlan[] = [
+  {
+    id: 'sip-1',
+    fundId: 'mf1',
+    fundName: 'Quant Active Fund Direct-Growth',
+    amount: 15000,
+    frequency: 'monthly',
+    nextDebitDate: '2026-10-05',
+    status: 'active',
+    totalInvested: 180000,
+    installmentsPaid: 12
+  },
+  {
+    id: 'sip-2',
+    fundId: 'mf2',
+    fundName: 'Parag Parikh Flexi Cap Fund',
+    amount: 20000,
+    frequency: 'monthly',
+    nextDebitDate: '2026-10-10',
+    status: 'active',
+    totalInvested: 320000,
+    installmentsPaid: 16
+  },
+  {
+    id: 'sip-3',
+    fundId: 'mf3',
+    fundName: 'Mirae Asset Large Cap Fund',
+    amount: 10000,
+    frequency: 'monthly',
+    nextDebitDate: '2026-10-15',
+    status: 'active',
+    totalInvested: 90000,
+    installmentsPaid: 9
+  }
+];
 
 interface AppActions {
   login: (email: string, role?: string) => User | null;
@@ -27,8 +99,10 @@ interface AppActions {
   addCommunityPost: (content: string, symbol?: string, sentiment?: CommunityPost['sentiment']) => void;
   addCommentToPost: (postId: string, content: string) => void;
   addRecommendation: (recommendation: Omit<Recommendation, 'id' | 'advisorId' | 'advisorName' | 'publishedAt' | 'followers' | 'isFollowed'>) => void;
+  deleteRecommendation: (id: string) => void;
   approveKYC: (id: string) => void;
   rejectKYC: (id: string, notes: string) => void;
+  submitKYCApplication: (app: Omit<KYCApplication, 'id' | 'submittedAt' | 'status'>) => void;
   updateUserSubscription: (userId: string, plan: SubscriptionPlan) => void;
   addToWatchlist: (symbol: string) => void;
   removeFromWatchlist: (symbol: string) => void;
@@ -43,9 +117,15 @@ interface AppActions {
   enrollCourse: (courseId: string) => void;
   updateCourseProgress: (courseId: string, progress: number) => void;
   deposit: (amount: number, method: string) => void;
-  withdraw: (amount: number) => void;
+  withdraw: (amount: number, bankDetails?: { bankName: string; accountNumber: string; ifsc: string }) => void;
   updateUserKYC: (status: KYCStatus) => void;
   updateUserProfile: (updates: Partial<User>) => void;
+  addGoal: (goal: Omit<FinancialGoal, 'id' | 'createdAt'>) => void;
+  updateGoal: (id: string, updates: Partial<FinancialGoal>) => void;
+  deleteGoal: (id: string) => void;
+  addSIP: (sip: Omit<SIPPlan, 'id' | 'totalInvested' | 'installmentsPaid'>) => void;
+  toggleSIPStatus: (id: string) => void;
+  cancelSIP: (id: string) => void;
 }
 
 const defaultState: Omit<AppState, keyof AppActions> = {
@@ -60,18 +140,21 @@ const defaultState: Omit<AppState, keyof AppActions> = {
   communityPosts: mockCommunityPosts,
   leaderboard: mockLeaderboard,
   marketStocks: mockMarketStocks,
-  walletBalance: 68420.50,
+  walletBalance: 148500.00,
   walletTransactions: mockWalletTransactions,
   mutualFunds: mockMutualFunds,
   courses: mockCourses,
   kycApplications: mockKYCApplications,
   subscriptionPlans: mockSubscriptionPlans,
-  watchlist: ['AAPL', 'MSFT', 'NVDA', 'GOOGL', 'AMZN'],
+  watchlist: ['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'TATAMOTORS'],
+  financialGoals: mockInitialGoals,
+  sipPlans: mockInitialSIPs,
   sidebarActive: 'overview',
   authModalOpen: false,
   authModalReason: '',
   notifications: mockAlerts,
 };
+
 
 export const useAppStore = create<AppState & AppActions>()(
   persist(
@@ -359,6 +442,29 @@ export const useAppStore = create<AppState & AppActions>()(
         }));
       },
 
+      deleteRecommendation: (id: string) => {
+        set(state => ({
+          recommendations: state.recommendations.filter(r => r.id !== id),
+        }));
+      },
+
+      submitKYCApplication: (appData) => {
+        const { currentUser } = get();
+        if (!currentUser) return;
+        const newApp: KYCApplication = {
+          ...appData,
+          id: `kyc${Date.now()}`,
+          submittedAt: new Date().toISOString(),
+          status: 'submitted',
+        };
+        set(state => ({
+          kycApplications: [newApp, ...state.kycApplications],
+          currentUser: state.currentUser ? { ...state.currentUser, kycStatus: 'submitted' } : null,
+          users: state.users.map(u => u.id === currentUser.id ? { ...u, kycStatus: 'submitted' } : u),
+        }));
+      },
+
+
       approveKYC: (id: string) => {
         set(state => {
           const app = state.kycApplications.find(k => k.id === id);
@@ -474,24 +580,44 @@ export const useAppStore = create<AppState & AppActions>()(
           timestamp: new Date().toISOString(),
           reference: `DEP-${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
         };
+        const addAlert = get().addAlert;
+        addAlert({
+          userId: get().currentUser?.id || '',
+          type: 'execution',
+          title: `Funds Added: ₹${amount.toLocaleString()}`,
+          message: `Successfully deposited ₹${amount.toLocaleString()} via ${method} (Razorpay Demo).`,
+          isRead: false,
+          isActive: true,
+        });
         set(state => ({
           walletBalance: state.walletBalance + amount,
           walletTransactions: [newTx, ...state.walletTransactions],
         }));
       },
 
-      withdraw: (amount: number) => {
+      withdraw: (amount: number, bankDetails) => {
         const { walletBalance } = get();
         if (amount > walletBalance) return;
         const newTx = {
           id: `tx${Date.now()}`,
           type: 'withdrawal' as const,
           amount: -amount,
-          description: 'Withdrawal to linked bank account',
+          description: bankDetails
+            ? `Withdrawal to ${bankDetails.bankName} (A/C: ...${bankDetails.accountNumber.slice(-4)})`
+            : 'Withdrawal to linked verified bank account',
           status: 'completed' as const,
           timestamp: new Date().toISOString(),
           reference: `WDR-${Math.random().toString(36).substr(2, 8).toUpperCase()}`,
         };
+        const addAlert = get().addAlert;
+        addAlert({
+          userId: get().currentUser?.id || '',
+          type: 'portfolio',
+          title: `Withdrawal Initiated: ₹${amount.toLocaleString()}`,
+          message: `Bank verification complete. ₹${amount.toLocaleString()} will be credited to your account within 24 working hours.`,
+          isRead: false,
+          isActive: true,
+        });
         set(state => ({
           walletBalance: state.walletBalance - amount,
           walletTransactions: [newTx, ...state.walletTransactions],
@@ -515,6 +641,54 @@ export const useAppStore = create<AppState & AppActions>()(
           ),
         }));
       },
+
+      addGoal: (goalData) => {
+        const { currentUser } = get();
+        if (!currentUser) return;
+        const newGoal: FinancialGoal = {
+          ...goalData,
+          id: `goal${Date.now()}`,
+          userId: currentUser.id,
+          createdAt: new Date().toISOString().split('T')[0],
+        };
+        set(state => ({ financialGoals: [newGoal, ...state.financialGoals] }));
+      },
+
+      updateGoal: (id: string, updates: Partial<FinancialGoal>) => {
+        set(state => ({
+          financialGoals: state.financialGoals.map(g => (g.id === id ? { ...g, ...updates } : g)),
+        }));
+      },
+
+      deleteGoal: (id: string) => {
+        set(state => ({
+          financialGoals: state.financialGoals.filter(g => g.id !== id),
+        }));
+      },
+
+      addSIP: (sipData) => {
+        const newSIP: SIPPlan = {
+          ...sipData,
+          id: `sip${Date.now()}`,
+          totalInvested: sipData.amount,
+          installmentsPaid: 1,
+        };
+        set(state => ({ sipPlans: [newSIP, ...state.sipPlans] }));
+      },
+
+      toggleSIPStatus: (id: string) => {
+        set(state => ({
+          sipPlans: state.sipPlans.map(s =>
+            s.id === id ? { ...s, status: s.status === 'active' ? 'paused' : 'active' } : s
+          ),
+        }));
+      },
+
+      cancelSIP: (id: string) => {
+        set(state => ({
+          sipPlans: state.sipPlans.map(s => (s.id === id ? { ...s, status: 'cancelled' } : s)),
+        }));
+      },
     }),
     {
       name: 'novaeq-store',
@@ -532,7 +706,11 @@ export const useAppStore = create<AppState & AppActions>()(
         kycApplications: state.kycApplications,
         courses: state.courses,
         recommendations: state.recommendations,
+        financialGoals: state.financialGoals,
+        sipPlans: state.sipPlans,
       }),
     }
   )
 );
+
+

@@ -1,11 +1,42 @@
 import React, { useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Users, UserCheck, Shield, TrendingUp, Activity, AlertCircle, FileText, Settings, Check, X, Eye } from 'lucide-react';
-import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+import {
+  Users,
+  UserCheck,
+  Shield,
+  TrendingUp,
+  Activity,
+  AlertCircle,
+  FileText,
+  Settings,
+  Check,
+  X,
+  Eye,
+  Zap,
+  Search,
+  Filter,
+  CheckCircle2,
+  Lock,
+  DollarSign,
+  AlertTriangle,
+  Play,
+  Pause,
+  Trash2
+} from 'lucide-react';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  BarChart,
+  Bar
+} from 'recharts';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAppStore } from '@/stores/useAppStore';
 import { formatCurrency, formatDate, formatTimeAgo, cn, getStatusBadge } from '@/lib/utils';
-import type { SubscriptionPlan } from '@/types';
+import type { SubscriptionPlan, Order, Strategy } from '@/types';
 
 const revenueData = Array.from({ length: 12 }, (_, i) => ({
   month: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i],
@@ -14,87 +45,133 @@ const revenueData = Array.from({ length: 12 }, (_, i) => ({
 }));
 
 const auditLogs = [
-  { id: 'log001', action: 'KYC Approved', user: 'Diana Lopez', admin: 'Sarah Williams', timestamp: '2024-01-12T10:00:00Z', type: 'kyc' },
-  { id: 'log002', action: 'KYC Rejected', user: 'Michael Wong', admin: 'Sarah Williams', timestamp: '2024-01-11T09:00:00Z', type: 'kyc', notes: 'Insufficient document quality' },
-  { id: 'log003', action: 'Subscription Changed', user: 'Alex Reynolds', admin: 'Sarah Williams', timestamp: '2024-01-10T14:30:00Z', type: 'subscription' },
-  { id: 'log004', action: 'Trade Flagged', user: 'Priya Sharma', admin: 'System Auto', timestamp: '2024-01-09T16:20:00Z', type: 'compliance' },
-  { id: 'log005', action: 'User Suspended', user: 'Anonymous_5521', admin: 'Sarah Williams', timestamp: '2024-01-08T11:45:00Z', type: 'security' },
+  { id: 'log001', action: 'KYC Approved', user: 'Diana Lopez', admin: 'Compliance Desk (Admin)', timestamp: '2024-01-12T10:00:00Z', type: 'kyc' },
+  { id: 'log002', action: 'KYC Rejected', user: 'Michael Wong', admin: 'Compliance Desk (Admin)', timestamp: '2024-01-11T09:00:00Z', type: 'kyc', notes: 'PAN Image blurred, re-upload requested' },
+  { id: 'log003', action: 'Subscription Upgraded', user: 'Alex Reynolds', admin: 'System Billing', timestamp: '2024-01-10T14:30:00Z', type: 'subscription' },
+  { id: 'log004', action: 'Trade Order Flagged', user: 'Priya Sharma', admin: 'Surveillance Engine', timestamp: '2024-01-09T16:20:00Z', type: 'compliance' },
+  { id: 'log005', action: 'Penny Drop Verified', user: 'Rohan Joshi', admin: 'NPCI IMPS Node', timestamp: '2024-01-08T11:45:00Z', type: 'security' },
 ];
 
 const systemAlerts = [
-  { title: 'High Trading Volume Detected', severity: 'warning', message: 'NVDA volume 3x above normal. Monitoring for manipulation.', time: '5m ago' },
-  { title: 'KYC Queue Building Up', severity: 'info', message: '3 new KYC submissions pending review. Average wait 18 hours.', time: '1h ago' },
-  { title: 'Server Response Time Elevated', severity: 'warning', message: 'P99 latency at 450ms — above 200ms threshold.', time: '2h ago' },
-  { title: 'Daily Revenue Milestone', severity: 'success', message: 'Platform crossed ₹1.2 Cr daily revenue for the first time.', time: '4h ago' },
+  { title: 'High Algo Trade Velocity Detected', severity: 'warning', message: 'NIFTY 24500 CE momentum strategy executed 48 orders in 10s. Monitoring risk limits.', time: '3m ago' },
+  { title: 'KYC Desk Queue Notification', severity: 'info', message: '3 new SEBI KYC submissions pending officer approval.', time: '45m ago' },
+  { title: 'Razorpay Sandbox Settlement', severity: 'success', message: 'All demo deposit and bank payout webhooks acknowledged with 100% SLA.', time: '2h ago' },
+  { title: 'Peak Margin Compliance Checked', severity: 'success', message: 'Zero margin shortfall detected across all retail and trader accounts.', time: '3h ago' },
 ];
 
 const AdminDashboard: React.FC = () => {
-  const { kycApplications, users, subscriptionPlans, approveKYC, rejectKYC, updateUserSubscription, alerts } = useAppStore();
+  const {
+    kycApplications,
+    users,
+    subscriptionPlans,
+    orders,
+    strategies,
+    approveKYC,
+    rejectKYC,
+    updateUserSubscription,
+    cancelOrder,
+    deleteOrder,
+    toggleStrategyStatus,
+  } = useAppStore();
+
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState((location.state as { activeTab?: string } | null)?.activeTab || 'overview');
+  const [activeTab, setActiveTab] = useState(
+    (location.state as { activeTab?: string } | null)?.activeTab || 'overview'
+  );
+
   const [rejectModal, setRejectModal] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
   const [rejectNotes, setRejectNotes] = useState('');
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
+  const [userSearch, setUserSearch] = useState('');
+  const [userRoleFilter, setUserRoleFilter] = useState('all');
+  const [flaggedOrders, setFlaggedOrders] = useState<Record<string, boolean>>({});
+  const [viewDocsModal, setViewDocsModal] = useState<{ open: boolean; userName: string; docs: string[] } | null>(null);
 
-  const pendingKYC = kycApplications.filter(k => k.status === 'pending' || k.status === 'submitted');
+  const pendingKYC = kycApplications.filter((k) => k.status === 'pending' || k.status === 'submitted');
   const totalUsers = users.length + 125000;
-  const activeUsers = Math.round(totalUsers * 0.78);
+
+  const filteredUsers = users.filter((u) => {
+    const matchesSearch = u.name.toLowerCase().includes(userSearch.toLowerCase()) || u.email.toLowerCase().includes(userSearch.toLowerCase());
+    const matchesRole = userRoleFilter === 'all' || u.role === userRoleFilter;
+    return matchesSearch && matchesRole;
+  });
+
+  const toggleFlagOrder = (orderId: string) => {
+    setFlaggedOrders((prev) => ({ ...prev, [orderId]: !prev[orderId] }));
+  };
 
   return (
     <DashboardLayout activeTab={activeTab} onTabChange={setActiveTab}>
+      {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-6 animate-fade-in">
-          <div>
-            <h1 className="text-2xl font-display font-bold text-nova-text">Admin Dashboard</h1>
-            <p className="text-nova-text-muted text-sm">Platform management · Compliance · Analytics</p>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-2xl font-display font-bold text-nova-text">Super Admin & Compliance Command</h1>
+              <p className="text-nova-text-muted text-xs">SEBI Surveillance Desk · Platform Oversight · Revenue & Risk</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                ● System Health: 99.98%
+              </span>
+            </div>
           </div>
 
+          {/* Metric Highlights */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Total Users', value: totalUsers.toLocaleString(), sub: '+1,240 this week', icon: Users },
-              { label: 'Pending KYC', value: String(pendingKYC.length), sub: 'Awaiting review', icon: UserCheck, alert: pendingKYC.length > 0 },
-              { label: 'Monthly Revenue', value: '₹2.4 Cr', sub: '+18.2% MoM', icon: TrendingUp },
-              { label: 'Platform Uptime', value: '99.97%', sub: 'Last 30 days', icon: Activity },
-            ].map(({ label, value, sub, icon: Icon, alert }) => (
-              <div key={label} className={cn('nova-stat-card', alert && 'border-nova-yellow/40 bg-nova-yellow/5')} onClick={() => alert && setActiveTab('kyc')}>
-                <div className="flex items-center justify-between mb-3">
+              { label: 'Registered Investors & Traders', value: totalUsers.toLocaleString(), sub: '+1,480 this week', icon: Users, action: () => setActiveTab('users') },
+              { label: 'Pending KYC Submissions', value: String(pendingKYC.length), sub: 'Awaiting officer signoff', icon: UserCheck, alert: pendingKYC.length > 0, action: () => setActiveTab('kyc') },
+              { label: 'Monthly Platform Volume', value: '₹48.2 Cr', sub: '+22.4% MoM', icon: TrendingUp, action: () => setActiveTab('revenue') },
+              { label: 'Active Algo Strategies', value: String(strategies.filter((s) => s.status === 'active').length), sub: 'Deployed across live markets', icon: Zap, action: () => setActiveTab('algo') },
+            ].map(({ label, value, sub, icon: Icon, alert, action }) => (
+              <div
+                key={label}
+                className={cn('nova-stat-card cursor-pointer transition-all hover:border-nova-accent/50', alert && 'border-amber-500/40 bg-amber-500/5')}
+                onClick={action}
+              >
+                <div className="flex items-center justify-between mb-2">
                   <p className="text-xs text-nova-text-muted">{label}</p>
-                  <Icon size={16} className={alert ? 'text-nova-yellow' : 'text-nova-text-subtle'} />
+                  <Icon size={16} className={alert ? 'text-amber-400' : 'text-nova-text-subtle'} />
                 </div>
-                <p className="text-xl font-bold text-nova-text">{value}</p>
+                <p className="text-xl font-bold text-nova-text font-mono">{value}</p>
                 <p className="text-xs mt-1 text-nova-text-muted">{sub}</p>
               </div>
             ))}
           </div>
 
-          {/* System Alerts */}
+          {/* Live System Alerts */}
           <div className="nova-card overflow-hidden">
             <div className="px-5 py-3 bg-nova-surface2 border-b border-nova-border flex items-center justify-between">
-              <h3 className="text-sm font-bold text-nova-text">System Alerts</h3>
-              <span className="nova-badge-yellow text-xs">{systemAlerts.filter(a => a.severity === 'warning').length} warnings</span>
+              <h3 className="text-sm font-bold text-nova-text flex items-center gap-2">
+                <AlertTriangle size={15} className="text-amber-400" /> Real-Time Surveillance Feeds
+              </h3>
+              <span className="nova-badge-yellow text-xs">{systemAlerts.filter((a) => a.severity === 'warning').length} active triggers</span>
             </div>
-            {systemAlerts.map((alert, i) => (
-              <div key={i} className={cn('flex items-start gap-3 px-5 py-4 border-t border-nova-border/50', alert.severity === 'warning' ? 'bg-nova-yellow/5' : alert.severity === 'success' ? 'bg-nova-green/5' : '')}>
-                <div className={cn('w-2 h-2 rounded-full mt-1.5 flex-shrink-0', alert.severity === 'warning' ? 'bg-nova-yellow' : alert.severity === 'success' ? 'bg-nova-green' : 'bg-nova-primary-light')} />
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-nova-text">{alert.title}</p>
-                  <p className="text-xs text-nova-text-muted mt-0.5">{alert.message}</p>
+            <div className="divide-y divide-nova-border/50">
+              {systemAlerts.map((alert, i) => (
+                <div key={i} className="flex items-start gap-3 px-5 py-3.5 hover:bg-nova-surface2 transition-colors">
+                  <div className={cn('w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0', alert.severity === 'warning' ? 'bg-amber-400' : 'bg-emerald-400')} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-bold text-nova-text">{alert.title}</p>
+                    <p className="text-xs text-nova-text-muted mt-0.5">{alert.message}</p>
+                  </div>
+                  <span className="text-[11px] text-nova-text-subtle font-mono">{alert.time}</span>
                 </div>
-                <span className="text-xs text-nova-text-subtle">{alert.time}</span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
 
-          {/* Revenue Chart */}
+          {/* Revenue Analytics Chart */}
           <div className="nova-card p-5">
-            <h3 className="text-sm font-bold text-nova-text mb-4">Revenue & User Growth (2024)</h3>
-            <div className="h-52">
+            <h3 className="text-sm font-bold text-nova-text mb-4">Platform Revenue & Subscription Trajectory (2024)</h3>
+            <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={revenueData}>
                   <XAxis dataKey="month" tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip contentStyle={{ background: '#1E293B', border: 'none', borderRadius: 8, fontSize: 11 }} formatter={(v: number) => [`₹${(v / 1000).toFixed(0)}K`, 'Revenue']} />
-                  <Bar dataKey="revenue" fill="#1D4ED8" radius={[4, 4, 0, 0]} />
+                  <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} />
+                  <Tooltip contentStyle={{ background: '#0F172A', border: '1px solid #334155', borderRadius: 8, fontSize: 11 }} formatter={(v: number) => [`₹${(v / 1000).toFixed(0)}K`, 'Revenue']} />
+                  <Bar dataKey="revenue" fill="#3B82F6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -102,188 +179,364 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* Users Management Tab */}
       {activeTab === 'users' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">User Management</h2>
-          <div className="nova-card overflow-hidden">
-            <div className="grid grid-cols-7 px-5 py-2.5 bg-nova-surface2 text-xs font-bold text-nova-text-muted">
-              {['User', 'Email', 'Role', 'KYC', 'Plan', 'Joined', 'Action'].map(h => <span key={h}>{h}</span>)}
-            </div>
-            {users.map(user => (
-              <div key={user.id} className="grid grid-cols-7 px-5 py-3 border-t border-nova-border/50 items-center hover:bg-nova-surface2 cursor-pointer" onClick={() => setSelectedUser(user.id)}>
-                <div className="flex items-center gap-2">
-                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
-                  <span className="text-sm font-semibold text-nova-text truncate">{user.name}</span>
-                </div>
-                <span className="text-xs text-nova-text-muted truncate">{user.email}</span>
-                <span className="text-xs capitalize text-nova-text-muted">{user.role}</span>
-                <span className={cn('text-xs', getStatusBadge(user.kycStatus))}>{user.kycStatus}</span>
-                <span className="text-xs capitalize text-nova-text-muted">{user.subscription}</span>
-                <span className="text-xs text-nova-text-muted">{formatDate(user.joinDate)}</span>
-                <div className="flex gap-1">
-                  <button className="nova-btn-ghost p-1.5 text-xs" onClick={e => { e.stopPropagation(); setSelectedUser(user.id); }}><Eye size={14} /></button>
-                  <select className="nova-input py-1 px-2 text-xs w-24" onClick={e => e.stopPropagation()} onChange={e => {
-                    if (e.target.value) updateUserSubscription(user.id, e.target.value as SubscriptionPlan);
-                  }}>
-                    <option value="">Change Plan</option>
-                    {subscriptionPlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
-                </div>
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <h2 className="nova-section-title">User Accounts & Tier Administration</h2>
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-nova-text-subtle" />
+                <input
+                  type="text"
+                  value={userSearch}
+                  onChange={(e) => setUserSearch(e.target.value)}
+                  className="nova-input pl-8 py-1.5 text-xs w-48"
+                  placeholder="Search user / email..."
+                />
               </div>
-            ))}
+              <select
+                value={userRoleFilter}
+                onChange={(e) => setUserRoleFilter(e.target.value)}
+                className="nova-input py-1.5 px-3 text-xs w-32"
+              >
+                <option value="all">All Roles</option>
+                <option value="investor">Investor</option>
+                <option value="trader">Trader</option>
+                <option value="advisor">Advisor</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
           </div>
 
-          {selectedUser && (() => {
-            const u = users.find(u => u.id === selectedUser)!;
-            return (
-              <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-                <div className="glass-modal rounded-2xl border border-nova-border p-6 w-full max-w-md">
-                  <div className="flex items-center gap-3 mb-5">
-                    <img src={u.avatar} alt={u.name} className="w-14 h-14 rounded-full object-cover" />
-                    <div><p className="text-lg font-bold text-nova-text">{u.name}</p><p className="text-sm text-nova-text-muted capitalize">{u.role} · {u.subscription}</p></div>
-                    <button onClick={() => setSelectedUser(null)} className="ml-auto nova-btn-ghost p-2"><X size={18} /></button>
-                  </div>
-                  <div className="grid grid-cols-2 gap-3 text-sm mb-5">
-                    {[['Email', u.email], ['Phone', u.phone], ['KYC', u.kycStatus], ['Risk', u.riskProfile], ['Portfolio', formatCurrency(u.portfolioValue)], ['Total P&L', formatCurrency(u.totalPnL)]].map(([l, v]) => (
-                      <div key={String(l)} className="flex flex-col gap-0.5"><span className="text-xs text-nova-text-muted">{l}</span><span className="text-sm font-semibold text-nova-text capitalize">{v}</span></div>
-                    ))}
-                  </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => { updateUserSubscription(u.id, 'pro'); setSelectedUser(null); }} className="nova-btn-primary flex-1 text-sm">Upgrade to Pro</button>
-                    <button onClick={() => setSelectedUser(null)} className="nova-btn-ghost flex-1 text-sm">Close</button>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
+          <div className="nova-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-xs text-nova-text-muted bg-nova-surface2 border-b border-nova-border">
+                    <th className="text-left px-4 py-2.5">User Profile</th>
+                    <th className="text-left px-4 py-2.5">Role</th>
+                    <th className="text-left px-4 py-2.5">KYC Status</th>
+                    <th className="text-left px-4 py-2.5">Plan Tier</th>
+                    <th className="text-left px-4 py-2.5">Portfolio Value</th>
+                    <th className="text-right px-4 py-2.5">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredUsers.map((u) => (
+                    <tr key={u.id} className="border-t border-nova-border/50 text-xs hover:bg-nova-surface2 transition-colors">
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2.5">
+                          <img src={u.avatar} alt={u.name} className="w-8 h-8 rounded-full object-cover" />
+                          <div>
+                            <p className="font-bold text-nova-text">{u.name}</p>
+                            <p className="text-[11px] text-nova-text-muted">{u.email}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 capitalize font-medium text-nova-text">{u.role}</td>
+                      <td className="px-4 py-3">
+                        <span className={cn('text-[10px] font-bold px-2 py-0.5 rounded uppercase', getStatusBadge(u.kycStatus))}>
+                          {u.kycStatus}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={u.subscription}
+                          onChange={(e) => updateUserSubscription(u.id, e.target.value as SubscriptionPlan)}
+                          className="nova-input py-1 px-2 text-[11px] font-bold uppercase w-24"
+                        >
+                          {subscriptionPlans.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 font-mono font-bold text-nova-text">{formatCurrency(u.portfolioValue || 0)}</td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => setSelectedUser(u.id)}
+                          className="nova-btn-outline text-[11px] py-1 px-2.5"
+                        >
+                          Inspect Profile
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* KYC Approval Panel */}
       {activeTab === 'kyc' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">KYC Approval Panel</h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="nova-section-title">SEBI KYC Verification Desk</h2>
+              <p className="text-xs text-nova-text-muted">Review submitted PAN, Aadhaar, and bank statements for regulatory approval</p>
+            </div>
+            <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-3 py-1 rounded-lg">
+              {pendingKYC.length} Pending Review
+            </span>
+          </div>
+
           {pendingKYC.length === 0 ? (
-            <div className="text-center py-16"><UserCheck size={48} className="text-nova-accent mx-auto mb-4" /><h3 className="text-lg font-bold text-nova-text mb-2">All KYC Applications Reviewed</h3><p className="text-nova-text-muted text-sm">No pending applications. Great work!</p></div>
+            <div className="nova-card p-12 text-center space-y-3">
+              <CheckCircle2 size={42} className="text-emerald-400 mx-auto" />
+              <h3 className="text-lg font-bold text-nova-text">All KYC Applications Cleared</h3>
+              <p className="text-xs text-nova-text-muted">Zero pending submissions in compliance queue.</p>
+            </div>
           ) : (
             <div className="space-y-4">
-              {pendingKYC.map(app => (
-                <div key={app.id} className="nova-card p-5">
-                  <div className="flex items-start justify-between mb-3">
+              {pendingKYC.map((app) => (
+                <div key={app.id} className="nova-card p-5 border border-nova-border hover:border-nova-accent/40 transition-all">
+                  <div className="flex items-start justify-between flex-wrap gap-3 mb-4">
                     <div>
-                      <p className="text-sm font-bold text-nova-text">{app.userName}</p>
+                      <h3 className="text-base font-bold text-nova-text">{app.userName}</h3>
                       <p className="text-xs text-nova-text-muted">{app.userEmail}</p>
-                      <p className="text-xs text-nova-text-subtle mt-0.5">Submitted: {formatTimeAgo(app.submittedAt)}</p>
+                      <p className="text-[11px] text-nova-text-subtle font-mono mt-1">Submitted: {formatTimeAgo(app.submittedAt)}</p>
                     </div>
-                    <span className={cn('text-xs', getStatusBadge(app.status))}>{app.status}</span>
+                    <span className="text-xs font-mono font-bold px-2.5 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 uppercase">
+                      {app.status}
+                    </span>
                   </div>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {app.documents.map(doc => (
-                      <div key={doc} className="flex items-center gap-1.5 nova-glass px-3 py-1.5 rounded-lg text-xs text-nova-text-muted">
-                        <FileText size={12} className="text-nova-accent" />{doc}
-                      </div>
-                    ))}
+
+                  <div className="p-3 bg-nova-bg/60 rounded-xl mb-4 space-y-2">
+                    <p className="text-xs font-semibold text-nova-text">Uploaded Identity Files:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {app.documents.map((doc) => (
+                        <div key={doc} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-nova-surface text-xs text-nova-text font-mono border border-nova-border">
+                          <FileText size={13} className="text-nova-accent" /> {doc}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex gap-3">
-                    <button onClick={() => approveKYC(app.id)} className="flex items-center gap-2 bg-nova-green/10 border border-nova-green/30 text-nova-green hover:bg-nova-green/20 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                      <Check size={16} /> Approve
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-nova-border">
+                    <button
+                      onClick={() => approveKYC(app.id)}
+                      className="nova-btn-primary text-xs py-2 px-4 flex items-center gap-1.5 font-bold bg-emerald-500 hover:bg-emerald-600 text-white"
+                    >
+                      <Check size={14} /> Approve & Issue Compliance Certificate
                     </button>
-                    <button onClick={() => setRejectModal({ open: true, id: app.id })} className="flex items-center gap-2 bg-nova-red/10 border border-nova-red/30 text-nova-red hover:bg-nova-red/20 px-4 py-2 rounded-lg text-sm font-semibold transition-all">
-                      <X size={16} /> Reject
+                    <button
+                      onClick={() => setRejectModal({ open: true, id: app.id })}
+                      className="nova-btn-outline text-xs py-2 px-4 flex items-center gap-1.5 text-rose-400 hover:bg-rose-500/10 border-rose-500/30"
+                    >
+                      <X size={14} /> Reject with Note
                     </button>
-                    <button className="nova-btn-ghost text-sm"><Eye size={16} /> View Docs</button>
+                    <button
+                      onClick={() => setViewDocsModal({ open: true, userName: app.userName, docs: app.documents })}
+                      className="nova-btn-outline text-xs py-2 px-3 ml-auto flex items-center gap-1"
+                    >
+                      <Eye size={13} /> View Scans
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
           )}
-
-          {/* Recently Reviewed */}
-          <div className="nova-card overflow-hidden">
-            <div className="px-5 py-3 bg-nova-surface2 border-b border-nova-border"><h3 className="text-sm font-bold text-nova-text">Recently Reviewed</h3></div>
-            {kycApplications.filter(k => k.status === 'approved' || k.status === 'rejected').map(app => (
-              <div key={app.id} className="flex items-center justify-between px-5 py-3 border-t border-nova-border/50">
-                <div>
-                  <p className="text-sm font-semibold text-nova-text">{app.userName}</p>
-                  <p className="text-xs text-nova-text-muted">{app.reviewedAt ? formatTimeAgo(app.reviewedAt) : ''}</p>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={cn('text-xs', getStatusBadge(app.status))}>{app.status}</span>
-                  {app.notes && <p className="text-xs text-nova-text-subtle max-w-xs truncate">{app.notes}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
         </div>
       )}
 
-      {activeTab === 'compliance' && (
-        <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Compliance Tracker</h2>
-          <div className="grid md:grid-cols-3 gap-4 mb-4">
-            {[{ label: 'SEBI Compliant', value: '100%', color: 'text-nova-green' }, { label: 'Flagged Trades', value: '2', color: 'text-nova-yellow' }, { label: 'Compliance Score', value: '98.4', color: 'text-nova-accent' }].map(({ label, value, color }) => (
-              <div key={label} className="nova-card p-4 text-center"><p className="text-xs text-nova-text-muted mb-1">{label}</p><p className={`text-3xl font-black ${color}`}>{value}</p></div>
-            ))}
-          </div>
-          <div className="nova-card p-5">
-            <h3 className="text-sm font-bold text-nova-text mb-4">Compliance Checklist</h3>
-            <div className="space-y-3">
-              {[
-                ['KYC/AML Compliance', true], ['SEBI Reporting — Daily', true], ['Insider Trading Monitoring', true],
-                ['Position Limit Monitoring', true], ['Client Suitability Assessment', true], ['Risk Disclosure Updates', false],
-              ].map(([label, done]) => (
-                <div key={String(label)} className="flex items-center gap-3">
-                  <div className={cn('w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0', done ? 'bg-nova-accent/10 border border-nova-accent/30' : 'bg-nova-yellow/10 border border-nova-yellow/30')}>
-                    {done ? <Check size={12} className="text-nova-accent" /> : <span className="text-nova-yellow text-xs">!</span>}
-                  </div>
-                  <span className="text-sm text-nova-text">{String(label)}</span>
-                  {!done && <span className="nova-badge-yellow text-xs ml-auto">Pending</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
+      {/* Trade Surveillance Tab */}
       {activeTab === 'trades' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Trade Monitoring</h2>
-          <div className="nova-card overflow-hidden">
-            <div className="grid grid-cols-7 px-5 py-2.5 bg-nova-surface2 text-xs font-bold text-nova-text-muted">
-              {['Order ID', 'User', 'Symbol', 'Type', 'Qty', 'Total', 'Status'].map(h => <span key={h}>{h}</span>)}
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="nova-section-title">Platform Trade Surveillance & Order Ledger</h2>
+              <p className="text-xs text-nova-text-muted">Live audit trail of all orders executed across retail and institutional traders</p>
             </div>
-            {useAppStore.getState().orders.map(o => (
-              <div key={o.id} className="grid grid-cols-7 px-5 py-3 border-t border-nova-border/50 text-sm hover:bg-nova-surface2">
-                <span className="text-nova-text-muted text-xs">{o.id}</span>
-                <span className="text-nova-text">User</span>
-                <span className="font-bold text-nova-text">{o.symbol}</span>
-                <span className={o.type === 'buy' ? 'text-nova-green' : 'text-nova-red'}>{o.type.toUpperCase()}</span>
-                <span className="text-nova-text">{o.quantity}</span>
-                <span className="text-nova-text">{formatCurrency(o.total)}</span>
-                <span className={getStatusBadge(o.status)}>{o.status}</span>
+            <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-lg">
+              {orders.length} Total Orders Monitored
+            </span>
+          </div>
+
+          <div className="nova-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="text-xs text-nova-text-muted bg-nova-surface2 border-b border-nova-border">
+                    <th className="text-left px-4 py-2.5">Order ID</th>
+                    <th className="text-left px-4 py-2.5">Security</th>
+                    <th className="text-left px-4 py-2.5">Side</th>
+                    <th className="text-left px-4 py-2.5">Quantity</th>
+                    <th className="text-left px-4 py-2.5">Execution Price</th>
+                    <th className="text-left px-4 py-2.5">Total Value</th>
+                    <th className="text-left px-4 py-2.5">Status</th>
+                    <th className="text-right px-4 py-2.5">Surveillance Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((o) => (
+                    <tr key={o.id} className={cn('border-t border-nova-border/50 text-xs hover:bg-nova-surface2 transition-colors', flaggedOrders[o.id] && 'bg-rose-500/5')}>
+                      <td className="px-4 py-3 font-mono text-nova-text-muted">{o.id}</td>
+                      <td className="px-4 py-3 font-bold text-nova-text">{o.symbol}</td>
+                      <td className="px-4 py-3 font-bold">
+                        <span className={cn('px-2 py-0.5 rounded text-[10px]', o.type === 'buy' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400')}>
+                          {o.type.toUpperCase()}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-nova-text">{o.quantity}</td>
+                      <td className="px-4 py-3 font-mono text-nova-text">₹{o.price.toFixed(2)}</td>
+                      <td className="px-4 py-3 font-mono font-bold text-nova-text">{formatCurrency(o.total || o.quantity * o.price)}</td>
+                      <td className="px-4 py-3 font-semibold capitalize text-nova-text">{o.status}</td>
+                      <td className="px-4 py-3 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => toggleFlagOrder(o.id)}
+                            className={cn('px-2 py-1 rounded text-[11px] font-bold border transition-all', flaggedOrders[o.id] ? 'bg-rose-500 text-white border-rose-600' : 'border-nova-border text-nova-text-muted hover:border-amber-500/50 hover:text-amber-400')}
+                          >
+                            {flaggedOrders[o.id] ? 'Flagged ⚑' : 'Flag Order'}
+                          </button>
+                          {o.status === 'open' && (
+                            <button
+                              onClick={() => cancelOrder(o.id)}
+                              className="px-2 py-1 rounded text-[11px] font-medium border border-rose-500/30 text-rose-400 hover:bg-rose-500/10"
+                            >
+                              Cancel
+                            </button>
+                          )}
+                          <button
+                            onClick={() => deleteOrder(o.id)}
+                            className="p-1 text-nova-text-subtle hover:text-rose-400"
+                            title="Delete Record"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Algo Strategies Oversight Tab */}
+      {activeTab === 'algo' && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="nova-section-title">Automated Trading Strategies Oversight</h2>
+              <p className="text-xs text-nova-text-muted">Master kill-switch and risk guardrails for all user-created algorithmic strategies</p>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-5">
+            {strategies.map((str) => (
+              <div key={str.id} className="nova-card p-5 border border-nova-border hover:border-nova-accent/40 transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={cn('px-2.5 py-0.5 rounded text-[10px] font-bold uppercase', str.status === 'active' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400')}>
+                      {str.status}
+                    </span>
+                    <span className="text-xs font-mono font-bold text-emerald-400">+{str.returns}% Win Rate: {str.winRate}%</span>
+                  </div>
+                  <h3 className="text-base font-bold text-nova-text mb-1">{str.name}</h3>
+                  <p className="text-xs text-nova-text-muted mb-4">{str.description}</p>
+
+                  <div className="grid grid-cols-3 gap-2 bg-nova-bg/50 p-2.5 rounded-xl text-xs font-mono mb-4">
+                    <div><span className="text-nova-text-subtle">Trades:</span> <span className="font-bold text-nova-text">{str.trades}</span></div>
+                    <div><span className="text-nova-text-subtle">Max DD:</span> <span className="font-bold text-rose-400">{str.maxDrawdown}%</span></div>
+                    <div><span className="text-nova-text-subtle">Followers:</span> <span className="font-bold text-cyan-400">{str.followers}</span></div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 pt-2 border-t border-nova-border">
+                  <button
+                    onClick={() => toggleStrategyStatus(str.id)}
+                    className={cn('text-xs py-2 px-4 rounded-xl flex-1 font-bold flex items-center justify-center gap-1.5 transition-all', str.status === 'active' ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30')}
+                  >
+                    {str.status === 'active' ? <><Pause size={13} /> Suspend Strategy</> : <><Play size={13} /> Re-activate Strategy</>}
+                  </button>
+                </div>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {activeTab === 'revenue' && (
+      {/* Compliance & Regulations Checklist Tab */}
+      {activeTab === 'compliance' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Revenue Analytics</h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[{ l: 'MRR', v: '₹2.4 Cr', c: 'text-nova-accent' }, { l: 'ARR', v: '₹28.8 Cr', c: 'text-nova-accent' }, { l: 'Avg ARPU', v: '₹1,920', c: 'text-nova-text' }, { l: 'Churn Rate', v: '2.1%', c: 'text-nova-red' }].map(({ l, v, c }) => (
-              <div key={l} className="nova-card p-4 text-center"><p className="text-xs text-nova-text-muted mb-1">{l}</p><p className={`text-2xl font-black ${c}`}>{v}</p></div>
+          <h2 className="nova-section-title">SEBI Regulatory Compliance Checklist</h2>
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            {[
+              { label: 'SEBI Compliant Status', value: '100%', color: 'text-emerald-400' },
+              { label: 'Active Flagged Trades', value: String(Object.values(flaggedOrders).filter(Boolean).length), color: 'text-amber-400' },
+              { label: 'Audit Compliance Score', value: '99.4/100', color: 'text-cyan-400' },
+            ].map(({ label, value, color }) => (
+              <div key={label} className="nova-card p-4 text-center">
+                <p className="text-xs text-nova-text-muted mb-1">{label}</p>
+                <p className={`text-3xl font-black font-mono ${color}`}>{value}</p>
+              </div>
             ))}
           </div>
+
+          <div className="nova-card p-5 space-y-3">
+            <h3 className="text-sm font-bold text-nova-text mb-2">Mandatory Statutory Compliance Checks</h3>
+            {[
+              ['Daily SEBI Margin Shortfall Reporting (T+1)', true],
+              ['Real-Time Anti-Money Laundering (PMLA) Scanning', true],
+              ['Insider Trading & Front-Running Surveillance Engine', true],
+              ['Segregation of Client Trading Funds with Clearing Corporations', true],
+              ['Penny-Drop Account Validation on Withdrawals', true],
+              ['Annual Information Security & ISO 27001 Audit', true],
+            ].map(([label, done]) => (
+              <div key={String(label)} className="flex items-center justify-between p-3 rounded-xl bg-nova-bg/50 border border-nova-border/70 text-xs">
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                    <Check size={12} />
+                  </div>
+                  <span className="font-semibold text-nova-text">{String(label)}</span>
+                </div>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/25 uppercase">
+                  Compliant
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Revenue & Subscriptions Tab */}
+      {activeTab === 'revenue' && (
+        <div className="space-y-6 animate-fade-in">
+          <h2 className="nova-section-title">Revenue & Subscription Monetization</h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { l: 'Monthly Recurring (MRR)', v: '₹2.48 Cr', c: 'text-emerald-400' },
+              { l: 'Annual Run Rate (ARR)', v: '₹29.7 Cr', c: 'text-cyan-400' },
+              { l: 'Average ARPU', v: '₹1,950', c: 'text-nova-text' },
+              { l: 'Pro/Elite Conversion', v: '18.4%', c: 'text-amber-400' },
+            ].map(({ l, v, c }) => (
+              <div key={l} className="nova-card p-4 text-center">
+                <p className="text-xs text-nova-text-muted mb-1">{l}</p>
+                <p className={`text-2xl font-black font-mono ${c}`}>{v}</p>
+              </div>
+            ))}
+          </div>
+
           <div className="nova-card p-5">
-            <h3 className="text-sm font-bold text-nova-text mb-4">Monthly Revenue Trend</h3>
+            <h3 className="text-sm font-bold text-nova-text mb-4">Monthly Platform Growth</h3>
             <div className="h-56">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={revenueData}>
-                  <defs><linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#10B981" stopOpacity={0.2} /><stop offset="95%" stopColor="#10B981" stopOpacity={0} /></linearGradient></defs>
+                  <defs>
+                    <linearGradient id="adminRevGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.25} />
+                      <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
                   <XAxis dataKey="month" tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={v => `₹${(v / 1000).toFixed(0)}K`} />
-                  <Tooltip contentStyle={{ background: '#1E293B', border: 'none', borderRadius: 8, fontSize: 11 }} />
-                  <Area type="monotone" dataKey="revenue" stroke="#10B981" fill="url(#revGrad)" strokeWidth={2} dot={false} />
+                  <YAxis tick={{ fill: '#64748B', fontSize: 11 }} axisLine={false} tickLine={false} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}K`} />
+                  <Tooltip contentStyle={{ background: '#0F172A', border: '1px solid #334155', borderRadius: 8, fontSize: 11 }} />
+                  <Area type="monotone" dataKey="revenue" stroke="#3B82F6" fill="url(#adminRevGrad)" strokeWidth={2} dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -291,87 +544,155 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {activeTab === 'subscriptions' && (
-        <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Subscription Management</h2>
-          <div className="grid md:grid-cols-4 gap-4">
-            {useAppStore.getState().subscriptionPlans.map(plan => (
-              <div key={plan.id} className="nova-card p-4 text-center">
-                <p className="text-sm font-bold text-nova-text">{plan.name}</p>
-                <p className="text-2xl font-black text-nova-accent mt-1">${plan.price}<span className="text-sm text-nova-text-muted">/mo</span></p>
-                <p className="text-xs text-nova-text-muted mt-2">{Math.round(Math.random() * 50000 + 10000).toLocaleString()} users</p>
-                <div className="w-full h-1.5 bg-nova-surface2 rounded-full mt-3">
-                  <div className="h-full bg-nova-primary rounded-full" style={{ width: `${[15, 25, 45, 15][useAppStore.getState().subscriptionPlans.indexOf(plan)]}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'alerts' && (
-        <div className="space-y-4 animate-fade-in">
-          <h2 className="nova-section-title">System Alerts</h2>
-          {systemAlerts.map((alert, i) => (
-            <div key={i} className={cn('nova-card p-4', alert.severity === 'warning' ? 'border-nova-yellow/30' : alert.severity === 'success' ? 'border-nova-green/30' : 'border-nova-border')}>
-              <div className="flex items-start gap-3">
-                <div className={cn('w-2 h-2 rounded-full mt-2', alert.severity === 'warning' ? 'bg-nova-yellow' : alert.severity === 'success' ? 'bg-nova-green' : 'bg-nova-primary-light')} />
-                <div><p className="text-sm font-semibold text-nova-text">{alert.title}</p><p className="text-xs text-nova-text-muted">{alert.message}</p><p className="text-xs text-nova-text-subtle mt-1">{alert.time}</p></div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
+      {/* Audit Logs Tab */}
       {activeTab === 'audit' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Audit Logs</h2>
+          <h2 className="nova-section-title">Platform Audit & Action Logs</h2>
           <div className="nova-card overflow-hidden">
-            <div className="grid grid-cols-5 px-5 py-2.5 bg-nova-surface2 text-xs font-bold text-nova-text-muted">
-              {['Action', 'User', 'Admin', 'Time', 'Type'].map(h => <span key={h}>{h}</span>)}
+            <div className="divide-y divide-nova-border/50">
+              {auditLogs.map((log) => (
+                <div key={log.id} className="flex items-center justify-between px-5 py-3.5 hover:bg-nova-surface2 transition-colors text-xs">
+                  <div>
+                    <p className="font-bold text-nova-text">{log.action}</p>
+                    <p className="text-nova-text-muted mt-0.5">Target: {log.user} · Executed by: {log.admin}</p>
+                    {log.notes && <p className="text-rose-400 mt-0.5">Note: {log.notes}</p>}
+                  </div>
+                  <div className="text-right">
+                    <span className="text-nova-text-subtle font-mono">{formatTimeAgo(log.timestamp)}</span>
+                  </div>
+                </div>
+              ))}
             </div>
-            {auditLogs.map(log => (
-              <div key={log.id} className="grid grid-cols-5 px-5 py-3 border-t border-nova-border/50 text-sm hover:bg-nova-surface2">
-                <span className="font-semibold text-nova-text">{log.action}</span>
-                <span className="text-nova-text-muted">{log.user}</span>
-                <span className="text-nova-text-muted">{log.admin}</span>
-                <span className="text-nova-text-subtle text-xs">{formatTimeAgo(log.timestamp)}</span>
-                <span className={cn('text-xs', log.type === 'kyc' ? 'nova-badge-blue' : log.type === 'compliance' ? 'nova-badge-yellow' : 'nova-badge-green')}>{log.type}</span>
-              </div>
-            ))}
           </div>
         </div>
       )}
 
+      {/* Platform Settings Tab */}
       {activeTab === 'settings' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Platform Settings</h2>
+          <h2 className="nova-section-title">Platform Feature Controls & Switches</h2>
           <div className="grid md:grid-cols-2 gap-5">
-            {[['Maintenance Mode', 'OFF'], ['KYC Auto-Approval', 'OFF'], ['Trading Hours Lock', 'ON'], ['Real-time Alerts', 'ON'], ['API Rate Limiting', 'ON'], ['Two-Factor Enforcement', 'ON']].map(([setting, status]) => (
+            {[
+              ['Algo Trading Execution Gateways', 'ENABLED'],
+              ['Razorpay Sandbox Test Gateway', 'ACTIVE (KEY: rzp_test_...)'],
+              ['Automated KYC Scanning', 'ENABLED'],
+              ['Trading Hours Lock (09:15 to 15:30 IST)', 'ENABLED'],
+              ['SEBI Margin Shortfall Kill-Switch', 'ENABLED'],
+              ['Maintenance Mode', 'OFF'],
+            ].map(([setting, status]) => (
               <div key={String(setting)} className="nova-card p-4 flex items-center justify-between">
-                <p className="text-sm font-semibold text-nova-text">{setting}</p>
-                <button className={cn('px-4 py-1.5 rounded-lg text-xs font-bold border transition-all', status === 'ON' ? 'bg-nova-accent/10 border-nova-accent/30 text-nova-accent' : 'bg-nova-surface2 border-nova-border text-nova-text-muted')}>
+                <p className="text-xs font-semibold text-nova-text">{setting}</p>
+                <span className={cn('px-3 py-1 rounded-lg text-[11px] font-bold font-mono', status.includes('ENABLED') || status.includes('ACTIVE') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-nova-surface text-nova-text-muted border border-nova-border')}>
                   {status}
-                </button>
+                </span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Reject Modal */}
+      {/* Inspect User Modal */}
+      {selectedUser && (() => {
+        const u = users.find((u) => u.id === selectedUser);
+        if (!u) return null;
+        return (
+          <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in">
+            <div className="nova-card border border-nova-border p-6 w-full max-w-md space-y-4">
+              <div className="flex items-center gap-3">
+                <img src={u.avatar} alt={u.name} className="w-14 h-14 rounded-full object-cover" />
+                <div>
+                  <h3 className="text-lg font-bold text-nova-text">{u.name}</h3>
+                  <p className="text-xs text-nova-text-muted capitalize">{u.role} · {u.subscription} subscription</p>
+                </div>
+                <button onClick={() => setSelectedUser(null)} className="ml-auto text-nova-text-muted hover:text-nova-text">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3 text-xs bg-nova-bg/50 p-3.5 rounded-xl">
+                <div><span className="text-nova-text-muted">Email:</span> <p className="font-semibold text-nova-text truncate">{u.email}</p></div>
+                <div><span className="text-nova-text-muted">Phone:</span> <p className="font-semibold text-nova-text">{u.phone}</p></div>
+                <div><span className="text-nova-text-muted">KYC Status:</span> <p className="font-semibold text-emerald-400 uppercase">{u.kycStatus}</p></div>
+                <div><span className="text-nova-text-muted">Risk Profile:</span> <p className="font-semibold text-nova-accent capitalize">{u.riskProfile}</p></div>
+                <div><span className="text-nova-text-muted">Portfolio:</span> <p className="font-mono font-bold text-nova-text">{formatCurrency(u.portfolioValue || 0)}</p></div>
+                <div><span className="text-nova-text-muted">Total P&L:</span> <p className="font-mono font-bold text-emerald-400">{formatCurrency(u.totalPnL || 0)}</p></div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => {
+                    updateUserSubscription(u.id, 'elite');
+                    setSelectedUser(null);
+                  }}
+                  className="nova-btn-primary text-xs flex-1 py-2 font-bold"
+                >
+                  Upgrade to Elite Tier
+                </button>
+                <button onClick={() => setSelectedUser(null)} className="nova-btn-outline text-xs flex-1 py-2">
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Reject KYC Modal */}
       {rejectModal.open && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="glass-modal rounded-2xl border border-nova-border p-6 w-full max-w-sm">
-            <h3 className="text-lg font-bold text-nova-text mb-3">Reject KYC Application</h3>
-            <p className="text-sm text-nova-text-muted mb-4">Provide a reason that will be sent to the applicant.</p>
-            <textarea value={rejectNotes} onChange={e => setRejectNotes(e.target.value)} className="nova-input resize-none h-24 mb-4" placeholder="e.g., Document quality insufficient. Please resubmit with clearer images." />
-            <div className="flex gap-3">
-              <button onClick={() => setRejectModal({ open: false, id: '' })} className="nova-btn-ghost flex-1">Cancel</button>
-              <button onClick={() => { rejectKYC(rejectModal.id, rejectNotes); setRejectModal({ open: false, id: '' }); setRejectNotes(''); }} className="bg-nova-red/10 border border-nova-red/30 text-nova-red hover:bg-nova-red/20 rounded-lg py-2.5 flex-1 font-semibold text-sm transition-all">
-                Reject
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="nova-card border border-nova-border p-6 w-full max-w-sm space-y-4">
+            <h3 className="text-lg font-bold text-nova-text">Reject KYC Application</h3>
+            <p className="text-xs text-nova-text-muted">Specify the regulatory reason for rejection to notify the applicant.</p>
+            <textarea
+              rows={3}
+              value={rejectNotes}
+              onChange={(e) => setRejectNotes(e.target.value)}
+              className="nova-input text-xs resize-none"
+              placeholder="e.g. Document image quality is blurred. Please upload original clear PDF scan."
+              required
+            />
+            <div className="flex gap-2">
+              <button onClick={() => setRejectModal({ open: false, id: '' })} className="nova-btn-outline text-xs flex-1 py-2">
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  rejectKYC(rejectModal.id, rejectNotes);
+                  setRejectModal({ open: false, id: '' });
+                  setRejectNotes('');
+                }}
+                className="bg-rose-500 hover:bg-rose-600 text-white rounded-xl text-xs flex-1 py-2 font-bold"
+              >
+                Confirm Rejection
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Docs Modal */}
+      {viewDocsModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 animate-fade-in">
+          <div className="nova-card border border-nova-border p-6 w-full max-w-md space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-bold text-nova-text">KYC Documents: {viewDocsModal.userName}</h3>
+              <button onClick={() => setViewDocsModal(null)} className="text-nova-text-muted hover:text-nova-text">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="space-y-2">
+              {viewDocsModal.docs.map((doc) => (
+                <div key={doc} className="p-3 bg-nova-bg/60 rounded-xl border border-nova-border flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-2 font-mono text-nova-text">
+                    <FileText size={15} className="text-nova-accent" /> {doc}
+                  </span>
+                  <span className="text-emerald-400 font-bold">Verified Scan</span>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setViewDocsModal(null)} className="nova-btn-primary text-xs w-full py-2">
+              Close Preview
+            </button>
           </div>
         </div>
       )}
