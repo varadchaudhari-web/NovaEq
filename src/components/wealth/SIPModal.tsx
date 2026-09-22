@@ -12,6 +12,8 @@ import {
 import { useAppStore } from '@/stores/useAppStore';
 import type { MutualFund } from '@/types';
 import { formatCurrency } from '@/lib/utils';
+import { initiateRazorpayPayment } from '@/lib/razorpay';
+import { toast } from 'sonner';
 
 interface SIPModalProps {
   isOpen: boolean;
@@ -20,35 +22,73 @@ interface SIPModalProps {
 }
 
 const SIPModal: React.FC<SIPModalProps> = ({ isOpen, onClose, fund }) => {
-  const { addSIP, walletBalance } = useAppStore();
+  const { addSIP, walletBalance, currentUser } = useAppStore();
   const [amount, setAmount] = useState(fund ? String(fund.minSIP) : '5000');
   const [frequency, setFrequency] = useState<'monthly' | 'weekly' | 'daily'>('monthly');
   const [debitDate, setDebitDate] = useState('05');
+  const [isProcessing, setIsProcessing] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
   if (!isOpen || !fund) return null;
 
   const numAmount = Number(amount);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!numAmount || numAmount < fund.minSIP) return;
 
-    addSIP({
-      fundId: fund.id,
-      fundName: fund.name,
+    setIsProcessing(true);
+
+    const isOpened = await initiateRazorpayPayment({
+      title: `SIP Mandate: ${fund.name}`,
+      description: `First Installment & E-Mandate Setup: ₹${numAmount.toLocaleString()}/${frequency}`,
       amount: numAmount,
-      frequency,
-      nextDebitDate: `2026-10-${debitDate.padStart(2, '0')}`,
-      status: 'active'
+      currency: 'INR',
+      userName: currentUser?.name || 'NovaEq Investor',
+      userEmail: currentUser?.email || 'investor@novaeq.ai',
+      onSuccess: (paymentId) => {
+        setIsProcessing(false);
+        addSIP({
+          fundId: fund.id,
+          fundName: fund.name,
+          amount: numAmount,
+          frequency,
+          nextDebitDate: `2026-10-${debitDate.padStart(2, '0')}`,
+          status: 'active'
+        });
+        setIsSuccess(true);
+        toast.success(`SIP Mandate authorized via Razorpay (${paymentId})!`);
+        setTimeout(() => {
+          setIsSuccess(false);
+          onClose();
+        }, 2000);
+      },
+      onFailure: () => {
+        setIsProcessing(false);
+      }
     });
 
-    setIsSuccess(true);
-    setTimeout(() => {
-      setIsSuccess(false);
-      onClose();
-    }, 1800);
+    if (!isOpened) {
+      setTimeout(() => {
+        setIsProcessing(false);
+        addSIP({
+          fundId: fund.id,
+          fundName: fund.name,
+          amount: numAmount,
+          frequency,
+          nextDebitDate: `2026-10-${debitDate.padStart(2, '0')}`,
+          status: 'active'
+        });
+        setIsSuccess(true);
+        toast.success(`SIP Mandate registered successfully!`);
+        setTimeout(() => {
+          setIsSuccess(false);
+          onClose();
+        }, 2000);
+      }, 1200);
+    }
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-fade-in">

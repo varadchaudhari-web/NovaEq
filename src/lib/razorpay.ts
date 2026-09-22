@@ -7,12 +7,15 @@
 export const RAZORPAY_TEST_KEY = 'rzp_test_TYGuf1uL6B9fAl';
 
 export interface RazorpayOptions {
-  planName: string;
-  amount: number; // in currency units (e.g., $10 or ₹800)
-  currency?: string;
+  planName?: string;
+  title?: string;
+  description?: string;
+  amount: number; // in INR if currency is INR, or in USD if not specified
+  currency?: 'INR' | 'USD';
   isYearly?: boolean;
   userEmail?: string;
   userName?: string;
+  contact?: string;
   onSuccess: (paymentId: string) => void;
   onFailure?: (error: unknown) => void;
 }
@@ -50,34 +53,40 @@ export const initiateRazorpayPayment = async (options: RazorpayOptions): Promise
     return false; // Fallback to custom in-app Demo Checkout modal
   }
 
-  // Convert USD / amount to INR equivalent for test checkout
-  const amountInPaise = Math.round(options.amount * 85 * 100);
+  // Calculate amount in paise (1 INR = 100 paise)
+  const isINR = options.currency === 'INR' || !options.currency;
+  const inrAmount = isINR ? options.amount : Math.round(options.amount * 85);
+  const amountInPaise = Math.round(inrAmount * 100);
+
+  const paymentTitle = options.title || options.planName || 'NovaEq Wallet Top-up';
+  const paymentDesc = options.description || `Payment for ${paymentTitle} [Razorpay Test Mode]`;
 
   const rzpOptions = {
     key: RAZORPAY_TEST_KEY,
     amount: amountInPaise,
     currency: 'INR',
-    name: 'NovaEq Technologies (Demo)',
-    description: `Subscription: ${options.planName} Plan (${options.isYearly ? 'Annual' : 'Monthly'}) [Test Mode]`,
+    name: 'NovaEq Technologies',
+    description: paymentDesc,
     image: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=100&h=100&fit=crop',
     handler: (response: { razorpay_payment_id: string }) => {
-      options.onSuccess(response.razorpay_payment_id || `pay_demo_${Date.now()}`);
+      const pId = response.razorpay_payment_id || `pay_rzp_${Date.now()}`;
+      options.onSuccess(pId);
     },
     prefill: {
-      name: options.userName || 'Demo User',
-      email: options.userEmail || 'demo@novaeq.ai',
-      contact: '9999999999',
+      name: options.userName || 'NovaEq Trader',
+      email: options.userEmail || 'trader@novaeq.ai',
+      contact: options.contact || '9876543210',
     },
     notes: {
-      mode: 'TEST_MODE_DEMO_ONLY',
-      plan: options.planName,
+      mode: 'TEST_MODE_DEMO',
+      purpose: paymentTitle,
     },
     theme: {
-      color: '#3B82F6',
+      color: '#00C9A7',
     },
     modal: {
       ondismiss: () => {
-        if (options.onFailure) options.onFailure('Payment cancelled by user');
+        if (options.onFailure) options.onFailure('Payment window closed by user');
       },
     },
   };
@@ -91,3 +100,4 @@ export const initiateRazorpayPayment = async (options: RazorpayOptions): Promise
     return false;
   }
 };
+
