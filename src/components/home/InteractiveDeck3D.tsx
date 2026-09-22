@@ -91,14 +91,7 @@ const InteractiveDeck3D: React.FC<InteractiveDeck3DProps> = ({
           return (
             <div
               key={signal.symbol}
-              onClick={() => {
-                if (diff === 0 && onCardClick) {
-                  onCardClick(signal);
-                } else {
-                  nextCard();
-                }
-              }}
-              className="deck-card cursor-pointer p-6"
+              className="deck-card cursor-default select-none p-6"
               style={{
                 transform: `translate3d(${translateX}px, ${translateY}px, ${translateZ}px) rotateY(${rotateY}deg) scale(${scale})`,
                 opacity,

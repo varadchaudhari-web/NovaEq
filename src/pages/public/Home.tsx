@@ -48,7 +48,6 @@ const Home: React.FC = () => {
 
   // Selected Card Modal State
   const [selectedFeature, setSelectedFeature] = useState<FeatureModalData | null>(null);
-  const [selectedSignal, setSelectedSignal] = useState<AISignalCardData | null>(null);
 
   // Mouse Parallax for Hero Panel & Typography
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
@@ -384,10 +383,6 @@ const Home: React.FC = () => {
     }
     const rolePath = currentUser?.role === 'trader' ? '/dashboard/trader' : '/dashboard/investor';
     navigate(rolePath, { state: { activeTab: tab || 'overview' } });
-  };
-
-  const handleSignalClick = (signal: AISignalCardData) => {
-    setSelectedSignal(signal);
   };
 
   return (
@@ -779,7 +774,7 @@ const Home: React.FC = () => {
 
           {/* 3D Stack Deck Carousel */}
           <div>
-            <InteractiveDeck3D onCardClick={handleSignalClick} />
+            <InteractiveDeck3D />
           </div>
         </div>
       </section>
@@ -1065,128 +1060,6 @@ const Home: React.FC = () => {
                 >
                   <span>Go to Dashboard</span>
                   <ExternalLink size={15} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* AI SIGNAL CARD SHOWCASE MODAL                                             */}
-      {/* ========================================================================= */}
-      {selectedSignal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md animate-fadeIn">
-          <div
-            className="relative w-full max-w-lg bg-[#0b1428] border border-[#1c2a45] rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9)] overflow-hidden flex flex-col"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="p-6 bg-gradient-to-b from-[#12203d] to-[#0b1428] border-b border-[#1c2a45] relative">
-              <button
-                onClick={() => setSelectedSignal(null)}
-                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-[#1c2a45]/80 hover:bg-[#2a3c61] text-slate-300 flex items-center justify-center transition-colors"
-              >
-                <X size={16} />
-              </button>
-
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/25">
-                  Live AI Trade Setup
-                </span>
-                <span className="text-xs font-mono text-slate-400">
-                  Confidence: <strong className="text-emerald-400">{selectedSignal.confidence}%</strong>
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between mt-2">
-                <div>
-                  <h3 className="text-2xl font-display font-bold text-white">
-                    {selectedSignal.symbol}
-                  </h3>
-                  <p className="text-xs text-slate-400">{selectedSignal.name}</p>
-                </div>
-                <div className="text-right">
-                  <span
-                    className={`inline-block px-3 py-1 rounded-lg text-xs font-bold ${
-                      selectedSignal.action === 'BUY' || selectedSignal.action === 'STRONG BUY'
-                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
-                        : 'bg-rose-500/20 text-rose-400 border border-rose-500/40'
-                    }`}
-                  >
-                    {selectedSignal.action}
-                  </span>
-                  <span className="block font-mono text-sm font-bold text-white mt-1">
-                    ${selectedSignal.price.toFixed(2)}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 space-y-4">
-              <div className="grid grid-cols-3 gap-2.5 p-3 rounded-2xl bg-[#0f1c33] border border-[#1c2a45] text-center">
-                <div>
-                  <span className="text-[11px] text-slate-400 block mb-0.5">Entry Range</span>
-                  <b className="font-mono text-xs text-slate-200">
-                    ${(selectedSignal.price * 0.995).toFixed(2)} - ${selectedSignal.price.toFixed(2)}
-                  </b>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-400 block mb-0.5">Target</span>
-                  <b className="font-mono text-xs text-emerald-400">
-                    ${selectedSignal.target.toFixed(2)}
-                  </b>
-                </div>
-                <div>
-                  <span className="text-[11px] text-slate-400 block mb-0.5">Stop Loss</span>
-                  <b className="font-mono text-xs text-rose-400">
-                    ${selectedSignal.stopLoss.toFixed(2)}
-                  </b>
-                </div>
-              </div>
-
-              <div>
-                <h4 className="text-xs font-mono uppercase tracking-wider text-slate-400 mb-1.5">
-                  AI Model Thesis & Catalyst
-                </h4>
-                <p className="text-xs text-slate-300 leading-relaxed bg-[#0f1c33]/50 p-3.5 rounded-xl border border-[#1c2a45]">
-                  {selectedSignal.catalyst}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between text-xs text-slate-400 px-1">
-                <span>Timeframe: <strong>{selectedSignal.timeframe}</strong></span>
-                <span>Signal ID: <strong className="font-mono">{selectedSignal.id}</strong></span>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="p-5 bg-[#080e1c] border-t border-[#1c2a45] flex items-center justify-between gap-3">
-              <button
-                onClick={() => setSelectedSignal(null)}
-                className="px-4 py-2 rounded-xl border border-[#1c2a45] text-slate-400 hover:text-white text-xs font-medium"
-              >
-                Close
-              </button>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    setSelectedSignal(null);
-                    navigate('/ai-insights');
-                  }}
-                  className="px-4 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 text-xs font-semibold"
-                >
-                  Explore AI Insights
-                </button>
-                <button
-                  onClick={() => {
-                    setSelectedSignal(null);
-                    handleLaunchInDashboard('trading');
-                  }}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white text-xs font-semibold shadow-md"
-                >
-                  Trade in Dashboard
                 </button>
               </div>
             </div>
