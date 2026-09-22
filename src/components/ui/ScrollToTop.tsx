@@ -3,20 +3,37 @@ import { useLocation } from 'react-router-dom';
 import { ArrowUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-/** Scrolls window to top on every route change */
+/** Scrolls window to top on route change or smoothly scrolls to target hash element */
 export const RouteScrollToTop: React.FC = () => {
   const { pathname, hash } = useLocation();
 
   useEffect(() => {
     if (hash) {
-      window.setTimeout(() => {
-        const target = document.getElementById(decodeURIComponent(hash.slice(1)));
+      const targetId = decodeURIComponent(hash.replace('#', ''));
+      let attempts = 0;
+      const maxAttempts = 15;
+
+      const scrollToElement = () => {
+        const target = document.getElementById(targetId);
         if (target) {
-          target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-          window.scrollBy({ top: -80, behavior: 'smooth' });
+          const navbarHeight = 85;
+          const rect = target.getBoundingClientRect();
+          const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+          const targetTop = rect.top + scrollTop - navbarHeight;
+
+          window.scrollTo({
+            top: Math.max(0, targetTop),
+            behavior: 'smooth',
+          });
+        } else if (attempts < maxAttempts) {
+          attempts += 1;
+          setTimeout(scrollToElement, 60);
         }
-      }, 0);
-      return;
+      };
+
+      // Initial slight delay to allow route component to mount
+      const timer = setTimeout(scrollToElement, 50);
+      return () => clearTimeout(timer);
     }
 
     window.scrollTo({ top: 0, behavior: 'smooth' });

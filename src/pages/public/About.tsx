@@ -118,21 +118,21 @@ const About: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-2xl font-display font-bold text-nova-text text-center mb-10">Trust, Terms & Security</h2>
           <div className="grid md:grid-cols-3 gap-5">
-            <TiltCard id="privacy" className="p-6 scroll-mt-24" tiltMaxAngle={8} translateZ={10}>
+            <TiltCard id="privacy" className="p-6 scroll-mt-28" tiltMaxAngle={8} translateZ={10}>
               <Shield size={24} className="text-nova-accent mb-4" />
               <h3 className="text-lg font-bold text-nova-text mb-2">Privacy Policy</h3>
               <p className="text-sm text-nova-text-muted leading-relaxed">
                 NovaEq collects only the account, KYC, portfolio, and usage data needed to operate the platform. We do not sell personal data, and users can request account data correction or deletion through support.
               </p>
             </TiltCard>
-            <TiltCard id="terms" className="p-6 scroll-mt-24" tiltMaxAngle={8} translateZ={10}>
+            <TiltCard id="terms" className="p-6 scroll-mt-28" tiltMaxAngle={8} translateZ={10}>
               <FileText size={24} className="text-nova-primary-light mb-4" />
               <h3 className="text-lg font-bold text-nova-text mb-2">Terms</h3>
               <p className="text-sm text-nova-text-muted leading-relaxed">
                 Platform insights, dashboards, simulations, and educational material are provided for informational use. Users remain responsible for investment decisions and must follow applicable market regulations.
               </p>
             </TiltCard>
-            <TiltCard id="security" className="p-6 scroll-mt-24" tiltMaxAngle={8} translateZ={10}>
+            <TiltCard id="security" className="p-6 scroll-mt-28" tiltMaxAngle={8} translateZ={10}>
               <Lock size={24} className="text-nova-yellow mb-4" />
               <h3 className="text-lg font-bold text-nova-text mb-2">Security</h3>
               <p className="text-sm text-nova-text-muted leading-relaxed">
@@ -144,7 +144,7 @@ const About: React.FC = () => {
       </div>
 
       {/* Careers CTA with 3D Tilt */}
-      <div id="careers" className="max-w-3xl mx-auto px-4 text-center pb-20 scroll-mt-24">
+      <div id="careers" className="max-w-3xl mx-auto px-4 text-center pb-20 scroll-mt-28">
         <TiltCard className="p-10" tiltMaxAngle={6} translateZ={10}>
           <Award size={32} className="text-nova-accent mx-auto mb-4" />
           <h2 className="text-2xl font-display font-bold text-nova-text mb-3">Join the NovaEq Team</h2>
