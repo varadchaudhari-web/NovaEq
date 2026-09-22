@@ -54,6 +54,7 @@ import KYCVerificationModal from '@/components/profile/KYCVerificationModal';
 import RiskAssessmentModal from '@/components/profile/RiskAssessmentModal';
 import FinancialGoalModal from '@/components/profile/FinancialGoalModal';
 import SIPModal from '@/components/wealth/SIPModal';
+import LumpsumModal from '@/components/wealth/LumpsumModal';
 import ProfileSettingsPanel from '@/components/profile/ProfileSettingsPanel';
 import type { FinancialGoal, MutualFund } from '@/types';
 
@@ -102,6 +103,7 @@ const RetailInvestorDashboard: React.FC = () => {
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [goalToEdit, setGoalToEdit] = useState<FinancialGoal | null>(null);
   const [selectedFundForSIP, setSelectedFundForSIP] = useState<MutualFund | null>(null);
+  const [selectedFundForLumpsum, setSelectedFundForLumpsum] = useState<MutualFund | null>(null);
 
   // Order Execution Modal
   const [tradeModal, setTradeModal] = useState<{ open: boolean; symbol: string; type: 'buy' | 'sell'; price: number }>({
@@ -833,11 +835,8 @@ const RetailInvestorDashboard: React.FC = () => {
                     Start SIP
                   </button>
                   <button
-                    onClick={() => {
-                      deposit(fund.minSIP * 2, `Lumpsum in ${fund.name}`);
-                      showToast(`Invested lumpsum in ${fund.name}`);
-                    }}
-                    className="nova-btn-outline text-xs py-2 flex-1"
+                    onClick={() => setSelectedFundForLumpsum(fund)}
+                    className="nova-btn-outline text-xs py-2 flex-1 hover:border-nova-accent hover:text-nova-accent font-semibold transition-all"
                   >
                     One-Time
                   </button>
@@ -1200,6 +1199,7 @@ const RetailInvestorDashboard: React.FC = () => {
       <RiskAssessmentModal isOpen={showRiskModal} onClose={() => setShowRiskModal(false)} />
       <FinancialGoalModal isOpen={showGoalModal} onClose={() => setShowGoalModal(false)} goalToEdit={goalToEdit} />
       <SIPModal isOpen={!!selectedFundForSIP} onClose={() => setSelectedFundForSIP(null)} fund={selectedFundForSIP} />
+      <LumpsumModal isOpen={!!selectedFundForLumpsum} onClose={() => setSelectedFundForLumpsum(null)} fund={selectedFundForLumpsum} />
     </DashboardLayout>
   );
 };
