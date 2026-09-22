@@ -346,39 +346,40 @@ const Pricing: React.FC = () => {
                 className={cn(
                   'p-7 sm:p-8 flex flex-col justify-between h-full min-h-[620px] relative border-2 transition-all',
                   plan.color,
-                  isCurrent && 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-950/10'
+                  isCurrent && 'border-emerald-500 ring-2 ring-emerald-500/40 bg-emerald-950/15'
                 )}
                 tiltMaxAngle={6}
                 translateZ={10}
               >
-                {/* Top Badges */}
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-                  {isCurrent ? (
-                    <span className="text-xs font-bold px-3.5 py-1 rounded-full bg-emerald-500 text-slate-950 shadow-md flex items-center gap-1">
-                      <CheckCircle2 size={13} /> Current Plan
-                    </span>
-                  ) : plan.badge ? (
-                    <span
-                      className={cn(
-                        'text-xs font-bold px-3.5 py-1 rounded-full shadow-md',
-                        plan.id === 'pro'
-                          ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950'
-                          : 'bg-gradient-to-r from-amber-400 to-amber-500 text-slate-950'
-                      )}
-                    >
-                      {plan.badge}
-                    </span>
-                  ) : null}
-                </div>
-
-                {/* Plan Info */}
+                {/* Plan Header Info */}
                 <div>
-                  <div className="mb-6 pt-1">
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      <h3 className="text-xl font-display font-bold text-white">{plan.name}</h3>
-                      {plan.id === 'pro' && <Zap size={18} className="text-emerald-400" />}
-                      {plan.id === 'elite' && <Sparkles size={18} className="text-amber-400" />}
+                  <div className="mb-5 pt-1">
+                    {/* Top Row: Plan Name & Badge */}
+                    <div className="flex items-center justify-between gap-2 mb-2 min-h-[32px]">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-display font-bold text-white">{plan.name}</h3>
+                        {plan.id === 'pro' && <Zap size={18} className="text-emerald-400" />}
+                        {plan.id === 'elite' && <Sparkles size={18} className="text-amber-400" />}
+                      </div>
+
+                      {isCurrent ? (
+                        <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/50 shadow-sm flex items-center gap-1">
+                          <CheckCircle2 size={12} className="text-emerald-400" /> Current Plan
+                        </span>
+                      ) : plan.badge ? (
+                        <span
+                          className={cn(
+                            'text-[11px] font-bold px-2.5 py-1 rounded-full shadow-sm',
+                            plan.id === 'pro'
+                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                              : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                          )}
+                        >
+                          {plan.badge}
+                        </span>
+                      ) : null}
                     </div>
+
                     <p className="text-xs text-slate-400 leading-relaxed min-h-[36px]">{plan.desc}</p>
                   </div>
 
