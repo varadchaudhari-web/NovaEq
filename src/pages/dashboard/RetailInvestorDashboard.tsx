@@ -55,8 +55,9 @@ import RiskAssessmentModal from '@/components/profile/RiskAssessmentModal';
 import FinancialGoalModal from '@/components/profile/FinancialGoalModal';
 import SIPModal from '@/components/wealth/SIPModal';
 import LumpsumModal from '@/components/wealth/LumpsumModal';
+import CourseLessonModal from '@/components/learning/CourseLessonModal';
 import ProfileSettingsPanel from '@/components/profile/ProfileSettingsPanel';
-import type { FinancialGoal, MutualFund } from '@/types';
+import type { FinancialGoal, MutualFund, Course } from '@/types';
 
 const SECTOR_COLORS = ['#1D4ED8', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4', '#EF4444'];
 
@@ -104,6 +105,7 @@ const RetailInvestorDashboard: React.FC = () => {
   const [goalToEdit, setGoalToEdit] = useState<FinancialGoal | null>(null);
   const [selectedFundForSIP, setSelectedFundForSIP] = useState<MutualFund | null>(null);
   const [selectedFundForLumpsum, setSelectedFundForLumpsum] = useState<MutualFund | null>(null);
+  const [selectedCourseForLessons, setSelectedCourseForLessons] = useState<Course | null>(null);
 
   // Order Execution Modal
   const [tradeModal, setTradeModal] = useState<{ open: boolean; symbol: string; type: 'buy' | 'sell'; price: number }>({
@@ -991,23 +993,39 @@ const RetailInvestorDashboard: React.FC = () => {
           <h2 className="nova-section-title">Investor Academy & Interactive Courses</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {courses.map((course) => (
-              <div key={course.id} className="nova-card overflow-hidden flex flex-col justify-between">
+              <div
+                key={course.id}
+                onClick={() => {
+                  if (!course.isEnrolled) {
+                    enrollCourse(course.id);
+                  }
+                  setSelectedCourseForLessons(course);
+                }}
+                className="nova-card overflow-hidden flex flex-col justify-between cursor-pointer hover:border-nova-accent/50 transition-all group"
+              >
                 <div>
-                  <img src={course.thumbnail} alt={course.title} className="w-full h-36 object-cover" />
+                  <div className="relative">
+                    <img src={course.thumbnail} alt={course.title} className="w-full h-36 object-cover group-hover:scale-105 transition-transform duration-300" />
+                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="w-10 h-10 rounded-full bg-nova-accent text-nova-bg flex items-center justify-center shadow-lg font-bold">
+                        ▶
+                      </div>
+                    </div>
+                  </div>
                   <div className="p-4 space-y-2">
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-nova-primary/20 text-nova-primary-light">
-                      {course.level.toUpperCase()}
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-nova-primary/20 text-nova-primary-light uppercase">
+                      {course.level}
                     </span>
-                    <h3 className="text-sm font-bold text-nova-text">{course.title}</h3>
+                    <h3 className="text-sm font-bold text-nova-text group-hover:text-nova-accent transition-colors">{course.title}</h3>
                     <p className="text-xs text-nova-text-muted">{course.instructor} · {course.duration}</p>
                     {course.isEnrolled && (
                       <div className="pt-2">
-                        <div className="flex justify-between text-[11px] text-nova-text-muted mb-1">
+                        <div className="flex justify-between text-[11px] text-nova-text-muted mb-1 font-mono">
                           <span>Progress</span>
-                          <span>{course.progress}%</span>
+                          <span className="text-emerald-400 font-bold">{course.progress}%</span>
                         </div>
                         <div className="w-full h-1.5 bg-nova-surface2 rounded-full overflow-hidden">
-                          <div className="h-full bg-nova-accent rounded-full" style={{ width: `${course.progress}%` }} />
+                          <div className="h-full bg-emerald-400 rounded-full transition-all" style={{ width: `${course.progress}%` }} />
                         </div>
                       </div>
                     )}
@@ -1015,18 +1033,17 @@ const RetailInvestorDashboard: React.FC = () => {
                 </div>
                 <div className="p-4 pt-0">
                   <button
-                    onClick={() => {
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (!course.isEnrolled) {
                         enrollCourse(course.id);
-                        showToast(`Enrolled in: ${course.title}`);
-                      } else {
-                        updateCourseProgress(course.id, Math.min(100, course.progress + 25));
-                        showToast(`Progress saved: ${course.title}`);
                       }
+                      setSelectedCourseForLessons(course);
                     }}
-                    className={cn('text-xs py-2 px-4 rounded-xl font-bold w-full', course.isEnrolled ? 'bg-nova-accent/20 border border-nova-accent/40 text-nova-accent' : 'nova-btn-primary')}
+                    className={cn('text-xs py-2 px-4 rounded-xl font-bold w-full transition-all', course.isEnrolled ? 'bg-nova-accent/20 border border-nova-accent/40 text-nova-accent hover:bg-nova-accent hover:text-nova-bg' : 'nova-btn-primary')}
                   >
-                    {course.isEnrolled ? (course.progress >= 100 ? 'Completed ✓' : 'Continue Lesson') : 'Enroll Free'}
+                    {course.isEnrolled ? (course.progress >= 100 ? 'Completed ✓ Watch Again' : 'Watch Lessons & Videos') : 'Start Learning & Watch'}
                   </button>
                 </div>
               </div>
@@ -1200,6 +1217,7 @@ const RetailInvestorDashboard: React.FC = () => {
       <FinancialGoalModal isOpen={showGoalModal} onClose={() => setShowGoalModal(false)} goalToEdit={goalToEdit} />
       <SIPModal isOpen={!!selectedFundForSIP} onClose={() => setSelectedFundForSIP(null)} fund={selectedFundForSIP} />
       <LumpsumModal isOpen={!!selectedFundForLumpsum} onClose={() => setSelectedFundForLumpsum(null)} fund={selectedFundForLumpsum} />
+      <CourseLessonModal isOpen={!!selectedCourseForLessons} onClose={() => setSelectedCourseForLessons(null)} course={selectedCourseForLessons} />
     </DashboardLayout>
   );
 };

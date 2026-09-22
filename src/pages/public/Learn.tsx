@@ -31,6 +31,7 @@ import { useAppStore } from '@/stores/useAppStore';
 import { mockCourses } from '@/lib/mockData';
 import { cn } from '@/lib/utils';
 import TiltCard from '@/components/ui/TiltCard';
+import { CourseLessonModal } from '@/components/learning/CourseLessonModal';
 import { toast } from 'sonner';
 import type { Course } from '@/types';
 
@@ -355,25 +356,20 @@ const Learn: React.FC = () => {
 
   // Course Handlers
   const handleCardClick = (course: Course) => {
-    if (!isLoggedIn) {
-      openAuthModal(`Access "${course.title}" — create your free account.`);
-      return;
-    }
-
     if (!course.isEnrolled) {
       enrollCourse(course.id);
-      addAlert({
-        userId: currentUser?.id || 'current',
-        type: 'portfolio',
-        title: 'Enrolled in Course',
-        message: `You are now enrolled in "${course.title}". Happy learning!`,
-      });
-      toast.success(`Successfully enrolled in ${course.title}!`);
+      if (isLoggedIn && currentUser) {
+        addAlert({
+          userId: currentUser.id,
+          type: 'portfolio',
+          title: 'Enrolled in Course',
+          message: `You are now enrolled in "${course.title}". Happy learning!`,
+        });
+      }
+      toast.success(`Enrolled in ${course.title}!`);
     }
 
     setActiveCourse(course);
-    setActiveLessonIndex(0);
-    setIsPlaying(true);
   };
 
   const handleEnrollButton = (e: React.MouseEvent, course: Course) => {
@@ -884,179 +880,12 @@ const Learn: React.FC = () => {
         )}
       </div>
 
-      {/* 1. INTERACTIVE COURSE VIDEO PLAYER MODAL */}
-      {activeCourse && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5">
-          <div className="bg-[#0a1224] border border-[#243960] rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="px-5 py-3.5 border-b border-[#1c2a45] flex items-center justify-between bg-[#0f1c33]">
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center flex-shrink-0">
-                  <Play size={16} className="fill-current" />
-                </span>
-                <div className="min-w-0 truncate">
-                  <h3 className="text-sm sm:text-base font-display font-bold text-white truncate">
-                    {activeCourse.title}
-                  </h3>
-                  <p className="text-xs text-slate-400 truncate">
-                    Instructor: {activeCourse.instructor} · Progress:{' '}
-                    <span className="text-emerald-400 font-semibold">{activeCourse.progress}%</span>
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setActiveCourse(null)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors ml-3"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            {/* Main */}
-            <div className="grid lg:grid-cols-3 flex-1 overflow-y-auto">
-              <div className="lg:col-span-2 p-4 sm:p-6 border-b lg:border-b-0 lg:border-r border-[#1c2a45] flex flex-col justify-between">
-                <div className="relative aspect-video w-full rounded-xl bg-slate-950 border border-[#1c2a45] overflow-hidden flex flex-col justify-between p-4 shadow-2xl group">
-                  <img
-                    src={activeCourse.thumbnail}
-                    alt="Lesson preview"
-                    className="absolute inset-0 w-full h-full object-cover opacity-30 filter blur-[1px]"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
-
-                  <div className="relative z-10 flex items-center justify-between">
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-black/60 backdrop-blur-md text-[11px] font-mono text-emerald-400 border border-emerald-500/30">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                      HD 1080p · Interactive Stream
-                    </span>
-                    <span className="text-xs font-mono text-slate-400 bg-black/60 px-2 py-0.5 rounded">
-                      {Math.floor(playbackTime / 60)}:{String(playbackTime % 60).padStart(2, '0')} / 28:50
-                    </span>
-                  </div>
-
-                  <div className="relative z-10 flex items-center justify-center my-auto">
-                    <button
-                      onClick={() => setIsPlaying(!isPlaying)}
-                      className="w-16 h-16 rounded-full bg-blue-600 hover:bg-blue-500 text-white flex items-center justify-center shadow-2xl hover:scale-105 transition-all"
-                    >
-                      {isPlaying ? <Pause size={26} /> : <Play size={26} className="ml-1 fill-current" />}
-                    </button>
-                  </div>
-
-                  <div className="relative z-10 space-y-2">
-                    <div
-                      className="w-full h-2 bg-slate-800/80 rounded-full cursor-pointer overflow-hidden"
-                      onClick={(e) => {
-                        const rect = e.currentTarget.getBoundingClientRect();
-                        const pct = (e.clientX - rect.left) / rect.width;
-                        setPlaybackTime(Math.round(pct * 1730));
-                      }}
-                    >
-                      <div
-                        className="h-full bg-gradient-to-r from-blue-500 to-emerald-400 transition-all duration-150"
-                        style={{ width: `${(playbackTime / 1730) * 100}%` }}
-                      />
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-slate-300 pt-1">
-                      <div className="flex items-center gap-3">
-                        <button onClick={() => setIsPlaying(!isPlaying)} className="hover:text-white">
-                          {isPlaying ? <Pause size={15} /> : <Play size={15} />}
-                        </button>
-                        <button onClick={() => setIsMuted(!isMuted)} className="hover:text-white">
-                          {isMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
-                        </button>
-                        <button
-                          onClick={() => setPlaybackTime(Math.max(0, playbackTime - 10))}
-                          className="hover:text-white flex items-center gap-0.5 text-[11px]"
-                        >
-                          <RotateCcw size={13} /> 10s
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-[11px] font-mono text-slate-400">Speed: 1.0x</span>
-                        <Maximize2 size={15} className="cursor-pointer hover:text-white" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t border-[#1c2a45]">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-2">
-                    <h4 className="text-sm sm:text-base font-bold text-white">
-                      {(sampleCurriculums[activeCourse.id] || sampleCurriculums.default)[activeLessonIndex]?.title || 'Active Lesson'}
-                    </h4>
-                    <button
-                      onClick={handleCompleteCurrentLesson}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 hover:bg-emerald-500/30 text-xs font-semibold transition-all w-fit"
-                    >
-                      <Check size={14} className="text-emerald-400" />
-                      <span>Mark Lesson Complete</span>
-                    </button>
-                  </div>
-                  <p className="text-xs text-slate-400 leading-relaxed">{activeCourse.description}</p>
-                </div>
-              </div>
-
-              {/* Sidebar */}
-              <div className="p-4 sm:p-5 bg-[#091020] flex flex-col justify-between">
-                <div>
-                  <h4 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider mb-3">
-                    Course Curriculum ({activeCourse.lessons} Lessons)
-                  </h4>
-                  <div className="space-y-2">
-                    {(sampleCurriculums[activeCourse.id] || sampleCurriculums.default).map((item, idx) => {
-                      const isCurrentLesson = idx === activeLessonIndex;
-                      return (
-                        <button
-                          key={item.title}
-                          onClick={() => {
-                            setActiveLessonIndex(idx);
-                            setIsPlaying(true);
-                          }}
-                          className={cn(
-                            'w-full text-left p-3 rounded-xl border transition-all flex items-center justify-between text-xs',
-                            isCurrentLesson
-                              ? 'bg-blue-600/20 border-blue-500 text-white shadow-sm'
-                              : 'bg-[#0f1c33]/70 border-[#1c2a45] text-slate-300 hover:bg-[#152545]'
-                          )}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0 pr-2">
-                            {item.completed ? (
-                              <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
-                            ) : (
-                              <span className="w-3.5 h-3.5 rounded-full border border-slate-600 flex-shrink-0" />
-                            )}
-                            <span className="truncate">{item.title}</span>
-                          </div>
-                          <span className="font-mono text-[10px] text-slate-400 flex-shrink-0">{item.duration}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="pt-4 mt-4 border-t border-[#1c2a45]">
-                  <button
-                    onClick={() => {
-                      const lessonsList = sampleCurriculums[activeCourse.id] || sampleCurriculums.default;
-                      if (activeLessonIndex < lessonsList.length - 1) {
-                        setActiveLessonIndex(activeLessonIndex + 1);
-                        setIsPlaying(true);
-                      } else {
-                        toast.success('Course finished! Congratulations!');
-                      }
-                    }}
-                    className="w-full py-2.5 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition-all flex items-center justify-center gap-1.5"
-                  >
-                    <span>Next Lesson</span>
-                    <ChevronRight size={14} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 1. INTERACTIVE COURSE & LESSON VIDEO MODAL */}
+      <CourseLessonModal
+        isOpen={!!activeCourse}
+        onClose={() => setActiveCourse(null)}
+        course={activeCourse}
+      />
 
       {/* 2. LIVE WEBINAR STREAM MODAL */}
       {activeLiveWebinar && (
