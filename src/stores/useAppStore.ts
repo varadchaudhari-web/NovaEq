@@ -33,7 +33,13 @@ interface AppActions {
   addToWatchlist: (symbol: string) => void;
   removeFromWatchlist: (symbol: string) => void;
   addStrategy: (strategy: Omit<Strategy, 'id' | 'createdAt' | 'backtestResults'>) => void;
+  updateStrategy: (id: string, updates: Partial<Strategy>) => void;
+  deleteStrategy: (id: string) => void;
   toggleStrategyStatus: (id: string) => void;
+  cancelOrder: (id: string) => void;
+  deleteOrder: (id: string) => void;
+  closeHolding: (symbol: string) => void;
+  updateHolding: (symbol: string, updates: Partial<Holding>) => void;
   enrollCourse: (courseId: string) => void;
   updateCourseProgress: (courseId: string, progress: number) => void;
   deposit: (amount: number, method: string) => void;
@@ -142,6 +148,7 @@ export const useAppStore = create<AppState & AppActions>()(
           id: `ord${Date.now()}`,
           timestamp: new Date().toISOString(),
         };
+
         const addAlert = get().addAlert;
         addAlert({
           userId: get().currentUser?.id || '',
@@ -152,7 +159,119 @@ export const useAppStore = create<AppState & AppActions>()(
           isRead: false,
           isActive: true,
         });
-        set(state => ({ orders: [newOrder, ...state.orders] }));
+
+        // Sync Holdings and Wallet balance if executed
+        if (orderData.status === 'executed') {
+          set((state) => {
+            const isBuy = orderData.type === 'buy';
+            const orderTotal = orderData.total || orderData.quantity * orderData.price;
+            const updatedWallet = isBuy
+              ? Math.max(0, state.walletBalance - orderTotal)
+              : state.walletBalance + orderTotal;
+
+            let updatedHoldings = [...state.holdings];
+            const existingIdx = updatedHoldings.findIndex(
+              (h) => h.symbol.toUpperCase() === orderData.symbol.toUpperCase()
+            );
+
+            if (isBuy) {
+              if (existingIdx >= 0) {
+                const existing = updatedHoldings[existingIdx];
+                const totalQty = existing.quantity + orderData.quantity;
+                const newAvg =
+                  (existing.avgPrice * existing.quantity + orderData.price * orderData.quantity) /
+                  totalQty;
+                const val = totalQty * orderData.price;
+                const pnl = val - totalQty * newAvg;
+                updatedHoldings[existingIdx] = {
+                  ...existing,
+                  quantity: totalQty,
+                  avgPrice: newAvg,
+                  currentPrice: orderData.price,
+                  value: val,
+                  pnl,
+                  pnlPercent: newAvg > 0 ? (pnl / (totalQty * newAvg)) * 100 : 0,
+                };
+              } else {
+                updatedHoldings.unshift({
+                  symbol: orderData.symbol.toUpperCase(),
+                  name: orderData.name || orderData.symbol,
+                  quantity: orderData.quantity,
+                  avgPrice: orderData.price,
+                  currentPrice: orderData.price,
+                  value: orderData.quantity * orderData.price,
+                  pnl: 0,
+                  pnlPercent: 0,
+                  change1dPercent: 0.85,
+                  assetClass: 'Equity',
+                  allocationPercent: 12.5,
+                });
+              }
+            } else {
+              // Sell order
+              if (existingIdx >= 0) {
+                const existing = updatedHoldings[existingIdx];
+                const remainingQty = existing.quantity - orderData.quantity;
+                if (remainingQty <= 0) {
+                  updatedHoldings = updatedHoldings.filter((_, idx) => idx !== existingIdx);
+                } else {
+                  const val = remainingQty * orderData.price;
+                  const pnl = val - remainingQty * existing.avgPrice;
+                  updatedHoldings[existingIdx] = {
+                    ...existing,
+                    quantity: remainingQty,
+                    currentPrice: orderData.price,
+                    value: val,
+                    pnl,
+                    pnlPercent: (pnl / (remainingQty * existing.avgPrice)) * 100,
+                  };
+                }
+              }
+            }
+
+            return {
+              orders: [newOrder, ...state.orders],
+              walletBalance: updatedWallet,
+              holdings: updatedHoldings,
+            };
+          });
+        } else {
+          set((state) => ({ orders: [newOrder, ...state.orders] }));
+        }
+      },
+
+      cancelOrder: (id: string) => {
+        set((state) => ({
+          orders: state.orders.map((o) => (o.id === id ? { ...o, status: 'cancelled' } : o)),
+        }));
+      },
+
+      deleteOrder: (id: string) => {
+        set((state) => ({
+          orders: state.orders.filter((o) => o.id !== id),
+        }));
+      },
+
+      closeHolding: (symbol: string) => {
+        const holding = get().holdings.find((h) => h.symbol.toUpperCase() === symbol.toUpperCase());
+        if (!holding) return;
+        get().addOrder({
+          symbol: holding.symbol,
+          name: holding.name,
+          type: 'sell',
+          quantity: holding.quantity,
+          price: holding.currentPrice,
+          status: 'executed',
+          total: holding.quantity * holding.currentPrice,
+        });
+      },
+
+      updateHolding: (symbol: string, updates: Partial<Holding>) => {
+        set((state) => ({
+          holdings: state.holdings.map((h) =>
+            h.symbol.toUpperCase() === symbol.toUpperCase() ? { ...h, ...updates } : h
+          ),
+        }));
       },
 
       toggleFollowRecommendation: (id: string) => {
@@ -309,6 +428,18 @@ export const useAppStore = create<AppState & AppActions>()(
           backtestResults: [],
         };
         set(state => ({ strategies: [newStrategy, ...state.strategies] }));
+      },
+
+      updateStrategy: (id: string, updates: Partial<Strategy>) => {
+        set(state => ({
+          strategies: state.strategies.map(s => (s.id === id ? { ...s, ...updates } : s)),
+        }));
+      },
+
+      deleteStrategy: (id: string) => {
+        set(state => ({
+          strategies: state.strategies.filter(s => s.id !== id),
+        }));
       },
 
       toggleStrategyStatus: (id: string) => {

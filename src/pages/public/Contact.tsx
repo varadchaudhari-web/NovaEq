@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Mail, Phone, MapPin, Clock, MessageCircle, Send, Check, Headphones, FileText, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Mail, Phone, MapPin, Clock, Send, Check, Headphones, Shield, RefreshCw, AlertCircle } from 'lucide-react';
 import { useAppStore } from '@/stores/useAppStore';
 
 const faqs = [
@@ -9,13 +9,41 @@ const faqs = [
   { q: 'Can I withdraw funds immediately?', a: 'Withdrawals are processed within 1-3 business hours during market hours. Funds reflect in your bank within T+1.' },
 ];
 
+const generateCaptcha = () => {
+  const chars = '23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz';
+  let result = '';
+  for (let i = 0; i < 6; i++) {
+    result += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return result;
+};
+
 const Contact: React.FC = () => {
   const { openAuthModal, isLoggedIn } = useAppStore();
   const [form, setForm] = useState({ name: '', email: '', subject: '', message: '', category: 'General Inquiry' });
+  const [captchaCode, setCaptchaCode] = useState('');
+  const [userCaptcha, setUserCaptcha] = useState('');
+  const [captchaError, setCaptchaError] = useState('');
   const [submitted, setSubmitted] = useState(false);
+
+  const refreshCaptcha = () => {
+    setCaptchaCode(generateCaptcha());
+    setUserCaptcha('');
+    setCaptchaError('');
+  };
+
+  useEffect(() => {
+    refreshCaptcha();
+  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (userCaptcha.trim().toLowerCase() !== captchaCode.toLowerCase()) {
+      setCaptchaError('Invalid Captcha code. Please check the code and try again.');
+      refreshCaptcha();
+      return;
+    }
+    setCaptchaError('');
     setTimeout(() => setSubmitted(true), 800);
   };
 
@@ -60,7 +88,7 @@ const Contact: React.FC = () => {
                 </div>
                 <h3 className="text-lg font-bold text-nova-text mb-2">Message Sent!</h3>
                 <p className="text-nova-text-muted text-sm">We'll get back to you at {form.email} within 4 hours.</p>
-                <button onClick={() => setSubmitted(false)} className="nova-btn-outline text-sm mt-5">Send Another</button>
+                <button onClick={() => { setSubmitted(false); refreshCaptcha(); }} className="nova-btn-outline text-sm mt-5">Send Another</button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="nova-card p-6 space-y-4">
@@ -88,8 +116,56 @@ const Contact: React.FC = () => {
                 </div>
                 <div>
                   <label className="nova-label">Message</label>
-                  <textarea required rows={5} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} className="nova-input resize-none" placeholder="Please describe your issue or question in detail..." />
+                  <textarea required rows={4} value={form.message} onChange={e => setForm({ ...form, message: e.target.value })} className="nova-input resize-none" placeholder="Please describe your issue or question in detail..." />
                 </div>
+
+                {/* Captcha Verification */}
+                <div className="bg-nova-bg/60 border border-nova-border/70 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold text-nova-text uppercase tracking-wider">
+                      Security Verification (Captcha)
+                    </label>
+                    <button
+                      type="button"
+                      onClick={refreshCaptcha}
+                      className="text-xs text-nova-accent hover:text-nova-accent/80 flex items-center gap-1 transition-colors"
+                      title="Generate new captcha"
+                    >
+                      <RefreshCw size={13} />
+                      Refresh
+                    </button>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <div className="relative select-none bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-nova-border rounded-lg px-4 py-2.5 shadow-inner flex items-center justify-center min-w-[140px] tracking-[0.35em] font-mono text-xl font-black text-cyan-300 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] overflow-hidden">
+                      <div className="absolute inset-0 opacity-20 pointer-events-none bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:8px_8px]" />
+                      <span className="relative z-10 italic transform skew-x-[-6deg]">{captchaCode}</span>
+                    </div>
+
+                    <div className="flex-1">
+                      <input
+                        type="text"
+                        required
+                        value={userCaptcha}
+                        onChange={e => {
+                          setUserCaptcha(e.target.value);
+                          if (captchaError) setCaptchaError('');
+                        }}
+                        className="nova-input text-sm"
+                        placeholder="Type the 6 characters"
+                        maxLength={8}
+                      />
+                    </div>
+                  </div>
+
+                  {captchaError && (
+                    <div className="flex items-center gap-1.5 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg p-2">
+                      <AlertCircle size={14} className="flex-shrink-0" />
+                      <span>{captchaError}</span>
+                    </div>
+                  )}
+                </div>
+
                 <button type="submit" className="nova-btn-primary w-full flex items-center justify-center gap-2">
                   <Send size={16} /> Send Message
                 </button>
@@ -126,3 +202,4 @@ const Contact: React.FC = () => {
 };
 
 export default Contact;
+
