@@ -54,6 +54,7 @@ import KYCVerificationModal from '@/components/profile/KYCVerificationModal';
 import RiskAssessmentModal from '@/components/profile/RiskAssessmentModal';
 import FinancialGoalModal from '@/components/profile/FinancialGoalModal';
 import SIPModal from '@/components/wealth/SIPModal';
+import ProfileSettingsPanel from '@/components/profile/ProfileSettingsPanel';
 import type { FinancialGoal, MutualFund } from '@/types';
 
 const SECTOR_COLORS = ['#1D4ED8', '#10B981', '#F59E0B', '#8B5CF6', '#06B6D4', '#EF4444'];
@@ -1122,39 +1123,8 @@ const RetailInvestorDashboard: React.FC = () => {
       {/* Profile & Settings Tab */}
       {activeTab === 'settings' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Investor Profile & Verification</h2>
-          <div className="nova-card p-6 space-y-6">
-            <div className="flex items-center gap-4">
-              <img src={currentUser?.avatar} alt={currentUser?.name} className="w-16 h-16 rounded-full object-cover border-2 border-nova-accent" />
-              <div>
-                <p className="text-lg font-bold text-nova-text">{currentUser?.name}</p>
-                <p className="text-xs text-nova-text-muted capitalize">{currentUser?.role} · {currentUser?.subscription} subscription</p>
-                <p className="text-xs text-nova-text-subtle">{currentUser?.email} · {currentUser?.phone}</p>
-              </div>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-nova-border/60">
-              <div className="p-4 rounded-xl bg-nova-bg/50 border border-nova-border flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-nova-text-muted">SEBI KYC Verification</p>
-                  <p className="text-sm font-bold text-nova-text uppercase">{currentUser?.kycStatus || 'pending'}</p>
-                </div>
-                <button onClick={() => setShowKYCModal(true)} className="nova-btn-accent text-xs py-1.5 px-3">
-                  Verify KYC
-                </button>
-              </div>
-
-              <div className="p-4 rounded-xl bg-nova-bg/50 border border-nova-border flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-nova-text-muted">Risk Tolerance Profile</p>
-                  <p className="text-sm font-bold text-nova-text capitalize">{currentUser?.riskProfile || 'moderate'}</p>
-                </div>
-                <button onClick={() => setShowRiskModal(true)} className="nova-btn-outline text-xs py-1.5 px-3">
-                  Retake Test
-                </button>
-              </div>
-            </div>
-          </div>
+          <h2 className="nova-section-title">Investor Profile & Account Settings</h2>
+          <ProfileSettingsPanel />
         </div>
       )}
 

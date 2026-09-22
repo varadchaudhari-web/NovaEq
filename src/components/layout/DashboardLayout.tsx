@@ -32,7 +32,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'learning', label: 'Learn', icon: BookOpen, section: 'resources' },
     { id: 'wallet', label: 'Wallet & Banking', icon: Wallet, section: 'resources' },
     { id: 'reports', label: 'Reports', icon: FileText, section: 'resources' },
-    { id: 'settings', label: 'Profile', icon: Settings, section: 'account' },
+    { id: 'settings', label: 'Profile & Settings', icon: Settings, section: 'account' },
   ],
   trader: [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, section: 'main' },
@@ -43,6 +43,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'charts', label: 'Analytics', icon: BarChart2, section: 'tools' },
     { id: 'alerts', label: 'Alerts', icon: Bell, section: 'social' },
     { id: 'wallet', label: 'Wallet & Banking', icon: Wallet, section: 'resources' },
+    { id: 'settings', label: 'Profile & Settings', icon: Settings, section: 'account' },
   ],
   advisor: [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, section: 'main' },
@@ -51,6 +52,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'recommendations', label: 'Recommendations', icon: Star, section: 'tools' },
     { id: 'community', label: 'Community', icon: Users, section: 'social' },
     { id: 'reports', label: 'Reports', icon: FileText, section: 'resources' },
+    { id: 'settings', label: 'Profile & Settings', icon: Settings, section: 'account' },
   ],
   admin: [
     { id: 'overview', label: 'Dashboard', icon: LayoutDashboard, section: 'main' },
@@ -61,9 +63,10 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'compliance', label: 'Regulations', icon: Shield, section: 'compliance' },
     { id: 'revenue', label: 'Revenue & Plans', icon: TrendingUp, section: 'monitoring' },
     { id: 'audit', label: 'Audit Logs', icon: FileText, section: 'system' },
-    { id: 'settings', label: 'Settings', icon: Settings, section: 'system' },
+    { id: 'settings', label: 'Platform & Profile Settings', icon: Settings, section: 'system' },
   ],
 };
+
 
 
 const sectionLabels: Record<string, string> = {

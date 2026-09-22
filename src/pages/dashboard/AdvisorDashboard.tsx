@@ -5,6 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAppStore } from '@/stores/useAppStore';
 import { formatCurrency, formatPercent, formatTimeAgo, getActionBadge, cn } from '@/lib/utils';
+import ProfileSettingsPanel from '@/components/profile/ProfileSettingsPanel';
 import type { RecommendationRisk } from '@/types';
 
 const AdvisorDashboard: React.FC = () => {
@@ -365,18 +366,8 @@ const AdvisorDashboard: React.FC = () => {
 
       {activeTab === 'settings' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Settings</h2>
-          <div className="nova-card p-6">
-            <div className="flex items-center gap-4 mb-4">
-              <img src={currentUser?.avatar} alt="" className="w-16 h-16 rounded-full object-cover" />
-              <div><p className="text-lg font-bold text-nova-text">{currentUser?.name}</p><p className="text-sm text-nova-text-muted">CFA · {currentUser?.subscription} plan</p></div>
-            </div>
-            <div className="grid md:grid-cols-2 gap-4">
-              {[['KYC', currentUser?.kycStatus], ['Followers', currentUser?.followersCount], ['Subscription', currentUser?.subscription], ['Member Since', currentUser?.joinDate]].map(([l, v]) => (
-                <div key={String(l)} className="flex justify-between py-2 border-b border-nova-border/50"><span className="text-sm text-nova-text-muted">{l}</span><span className="text-sm font-semibold text-nova-text capitalize">{String(v)}</span></div>
-              ))}
-            </div>
-          </div>
+          <h2 className="nova-section-title">Advisor Profile & Advisory Practice Settings</h2>
+          <ProfileSettingsPanel />
         </div>
       )}
 

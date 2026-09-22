@@ -30,6 +30,7 @@ import { formatCurrency, formatPercent, formatTimeAgo, cn, getStatusBadge } from
 import { mockMarketStocks } from '@/lib/mockData';
 import DepositModal from '@/components/wallet/DepositModal';
 import WithdrawalModal from '@/components/wallet/WithdrawalModal';
+import ProfileSettingsPanel from '@/components/profile/ProfileSettingsPanel';
 import type { Strategy, Order, Holding } from '@/types';
 
 const TraderDashboard: React.FC = () => {
@@ -1196,6 +1197,14 @@ const TraderDashboard: React.FC = () => {
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* SETTINGS & PROFILE TAB */}
+      {activeTab === 'settings' && (
+        <div className="space-y-5 animate-fade-in">
+          <h2 className="nova-section-title">Trader Profile & Risk Configuration</h2>
+          <ProfileSettingsPanel />
         </div>
       )}
 

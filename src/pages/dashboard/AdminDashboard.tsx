@@ -36,6 +36,7 @@ import {
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAppStore } from '@/stores/useAppStore';
 import { formatCurrency, formatDate, formatTimeAgo, cn, getStatusBadge } from '@/lib/utils';
+import ProfileSettingsPanel from '@/components/profile/ProfileSettingsPanel';
 import type { SubscriptionPlan, Order, Strategy } from '@/types';
 
 const revenueData = Array.from({ length: 12 }, (_, i) => ({
@@ -567,27 +568,11 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Platform Settings Tab */}
+      {/* Platform & Profile Settings Tab */}
       {activeTab === 'settings' && (
         <div className="space-y-5 animate-fade-in">
-          <h2 className="nova-section-title">Platform Feature Controls & Switches</h2>
-          <div className="grid md:grid-cols-2 gap-5">
-            {[
-              ['Algo Trading Execution Gateways', 'ENABLED'],
-              ['Razorpay Sandbox Test Gateway', 'ACTIVE (KEY: rzp_test_...)'],
-              ['Automated KYC Scanning', 'ENABLED'],
-              ['Trading Hours Lock (09:15 to 15:30 IST)', 'ENABLED'],
-              ['SEBI Margin Shortfall Kill-Switch', 'ENABLED'],
-              ['Maintenance Mode', 'OFF'],
-            ].map(([setting, status]) => (
-              <div key={String(setting)} className="nova-card p-4 flex items-center justify-between">
-                <p className="text-xs font-semibold text-nova-text">{setting}</p>
-                <span className={cn('px-3 py-1 rounded-lg text-[11px] font-bold font-mono', status.includes('ENABLED') || status.includes('ACTIVE') ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-nova-surface text-nova-text-muted border border-nova-border')}>
-                  {status}
-                </span>
-              </div>
-            ))}
-          </div>
+          <h2 className="nova-section-title">Admin Account & Platform Control Settings</h2>
+          <ProfileSettingsPanel isAdmin={true} />
         </div>
       )}
 
