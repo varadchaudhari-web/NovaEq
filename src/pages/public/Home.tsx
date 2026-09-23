@@ -25,6 +25,7 @@ import TiltCard from '@/components/home/TiltCard';
 import InteractiveDeck3D, { AISignalCardData } from '@/components/home/InteractiveDeck3D';
 import MarketTickerTape from '@/components/home/MarketTickerTape';
 import AnimatedCounter from '@/components/home/AnimatedCounter';
+import PlatformGalleryShowcase from '@/components/home/PlatformGalleryShowcase';
 import { useAppStore } from '@/stores/useAppStore';
 
 interface FeatureModalData {
@@ -714,6 +715,9 @@ const Home: React.FC = () => {
           })}
         </div>
       </section>
+
+      {/* PLATFORM VISUAL GALLERY & AUTO-SCROLL CAROUSEL */}
+      <PlatformGalleryShowcase />
 
       {/* AI RECOMMENDATION ENGINE & 3D STACK DECK */}
       <section
