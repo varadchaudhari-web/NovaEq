@@ -30,11 +30,12 @@ const footerGroups = [
     ],
   },
   {
-    title: 'Legal',
+    title: 'Legal & Risk',
     links: [
-      { label: 'Privacy Policy', href: '/about#privacy' },
-      { label: 'Terms', href: '/about#terms' },
-      { label: 'Security', href: '/about#security' },
+      { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Terms of Service', href: '/terms' },
+      { label: 'Security & Compliance', href: '/security' },
+      { label: 'Risk Disclosure', href: '/risk-disclosure' },
     ],
   },
 ];
@@ -138,9 +139,10 @@ const Footer: React.FC = () => {
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             {[
-              { label: 'Privacy Policy', href: '/about#privacy' },
-              { label: 'Terms', href: '/about#terms' },
-              { label: 'Security', href: '/about#security' },
+              { label: 'Privacy Policy', href: '/privacy' },
+              { label: 'Terms of Service', href: '/terms' },
+              { label: 'Security', href: '/security' },
+              { label: 'Risk Disclosure', href: '/risk-disclosure' },
             ].map(({ label, href }) => (
               <Link key={label} to={href} className="text-nova-text-subtle hover:text-nova-text-muted text-xs transition-colors">
                 {label}

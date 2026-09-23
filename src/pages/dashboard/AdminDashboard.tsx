@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Users,
@@ -21,7 +21,8 @@ import {
   AlertTriangle,
   Play,
   Pause,
-  Trash2
+  Trash2,
+  Bell
 } from 'lucide-react';
 import {
   AreaChart,
@@ -37,6 +38,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useAppStore } from '@/stores/useAppStore';
 import { formatCurrency, formatDate, formatTimeAgo, cn, getStatusBadge } from '@/lib/utils';
 import ProfileSettingsPanel from '@/components/profile/ProfileSettingsPanel';
+import LearnManagementPanel from '@/components/admin/LearnManagementPanel';
 import type { SubscriptionPlan, Order, Strategy } from '@/types';
 
 const revenueData = Array.from({ length: 12 }, (_, i) => ({
@@ -67,6 +69,9 @@ const AdminDashboard: React.FC = () => {
     subscriptionPlans,
     orders,
     strategies,
+    alerts,
+    markAlertRead,
+    markAllAlertsRead,
     approveKYC,
     rejectKYC,
     updateUserSubscription,
@@ -79,6 +84,13 @@ const AdminDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState(
     (location.state as { activeTab?: string } | null)?.activeTab || 'overview'
   );
+
+  useEffect(() => {
+    const stateTab = (location.state as { activeTab?: string } | null)?.activeTab;
+    if (stateTab) {
+      setActiveTab(stateTab);
+    }
+  }, [location.state]);
 
   const [rejectModal, setRejectModal] = useState<{ open: boolean; id: string }>({ open: false, id: '' });
   const [rejectNotes, setRejectNotes] = useState('');
@@ -568,6 +580,61 @@ const AdminDashboard: React.FC = () => {
         </div>
       )}
 
+      {/* System Alerts Tab */}
+      {activeTab === 'alerts' && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h2 className="nova-section-title">System Surveillance & Market Alerts</h2>
+              <p className="text-xs text-nova-text-muted mt-0.5">
+                Surveillance anomalies, circuit breaker warnings, API rate-limit spikes, and execution notifications.
+              </p>
+            </div>
+            <button
+              onClick={markAllAlertsRead}
+              className="nova-btn-outline text-xs py-2 px-3.5 flex items-center gap-1.5"
+            >
+              <CheckCircle2 size={14} className="text-emerald-400" />
+              <span>Mark All as Read</span>
+            </button>
+          </div>
+
+          <div className="space-y-3">
+            {alerts.map((alert) => (
+              <div
+                key={alert.id}
+                onClick={() => markAlertRead(alert.id)}
+                className={cn(
+                  'nova-card p-4 transition-all flex items-start justify-between gap-4 cursor-pointer hover:border-nova-primary/40',
+                  !alert.isRead ? 'border-nova-primary/40 bg-nova-primary/5' : 'bg-nova-surface'
+                )}
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Bell size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                      <span className="text-sm font-bold text-nova-text">{alert.title}</span>
+                      {!alert.isRead && (
+                        <span className="w-2 h-2 rounded-full bg-nova-primary animate-pulse" />
+                      )}
+                      {alert.symbol && (
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-nova-surface2 border border-nova-border text-nova-accent font-bold">
+                          {alert.symbol}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-nova-text-muted leading-relaxed mb-1.5">{alert.message}</p>
+                    <span className="text-[11px] text-nova-text-subtle">{formatTimeAgo(alert.createdAt)}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Platform & Profile Settings Tab */}
       {activeTab === 'settings' && (
         <div className="space-y-5 animate-fade-in">
@@ -621,6 +688,9 @@ const AdminDashboard: React.FC = () => {
           </div>
         );
       })()}
+
+      {/* Learn Page & Educational CMS Management */}
+      {activeTab === 'learn-mgmt' && <LearnManagementPanel />}
 
       {/* Reject KYC Modal */}
       {rejectModal.open && (

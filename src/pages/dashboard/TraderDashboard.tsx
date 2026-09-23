@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   Zap,
@@ -58,6 +58,13 @@ const TraderDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState(
     (location.state as { activeTab?: string; selectedSymbol?: string } | null)?.activeTab || 'overview'
   );
+
+  useEffect(() => {
+    const stateTab = (location.state as { activeTab?: string } | null)?.activeTab;
+    if (stateTab) {
+      setActiveTab(stateTab);
+    }
+  }, [location.state]);
 
   // Toast Notification State
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);

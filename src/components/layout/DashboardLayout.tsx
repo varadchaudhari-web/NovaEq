@@ -8,7 +8,8 @@ import {
 } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useAppStore } from '@/stores/useAppStore';
-import { cn, formatCurrency } from '@/lib/utils';
+import { formatCurrency, cn } from '@/lib/utils';
+import NotificationDropdown from '@/components/layout/NotificationDropdown';
 import type { UserRole } from '@/types';
 
 interface NavItem {
@@ -28,6 +29,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'goals', label: 'Financial Goals', icon: Target, section: 'wealth' },
     { id: 'mutual-funds', label: 'Mutual Funds & SIPs', icon: PieChart, section: 'wealth' },
     { id: 'ai-insights', label: 'AI Insights', icon: Brain, section: 'tools' },
+    { id: 'alerts', label: 'Alerts & Notifications', icon: Bell, section: 'tools' },
     { id: 'community', label: 'Community', icon: Users, section: 'social' },
     { id: 'learning', label: 'Learn', icon: BookOpen, section: 'resources' },
     { id: 'wallet', label: 'Wallet & Banking', icon: Wallet, section: 'resources' },
@@ -50,6 +52,7 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'clients', label: 'Clients', icon: Users, section: 'main' },
     { id: 'portfolios', label: 'Portfolios', icon: Briefcase, section: 'main' },
     { id: 'recommendations', label: 'Recommendations', icon: Star, section: 'tools' },
+    { id: 'alerts', label: 'Alerts & Signals', icon: Bell, section: 'tools' },
     { id: 'community', label: 'Community', icon: Users, section: 'social' },
     { id: 'reports', label: 'Reports', icon: FileText, section: 'resources' },
     { id: 'settings', label: 'Profile & Settings', icon: Settings, section: 'account' },
@@ -62,6 +65,8 @@ const navByRole: Record<UserRole, NavItem[]> = {
     { id: 'algo', label: 'Strategies Oversight', icon: Zap, section: 'compliance' },
     { id: 'compliance', label: 'Regulations', icon: Shield, section: 'compliance' },
     { id: 'revenue', label: 'Revenue & Plans', icon: TrendingUp, section: 'monitoring' },
+    { id: 'alerts', label: 'System Alerts', icon: Bell, section: 'monitoring' },
+    { id: 'learn-mgmt', label: 'Learn & Content', icon: BookOpen, section: 'system' },
     { id: 'audit', label: 'Audit Logs', icon: FileText, section: 'system' },
     { id: 'settings', label: 'Platform & Profile Settings', icon: Settings, section: 'system' },
   ],
@@ -289,18 +294,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, activeTab, 
               <span className="sm:hidden">Website</span>
             </button>
 
-            <button
-              onClick={() => onTabChange('alerts')}
-              className="relative nova-btn-ghost p-2"
-              title="Alerts"
-            >
-              <Bell size={18} />
-              {unreadAlerts > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-nova-red text-white text-xs rounded-full flex items-center justify-center font-bold leading-none">
-                  {unreadAlerts > 9 ? '9+' : unreadAlerts}
-                </span>
-              )}
-            </button>
+            <NotificationDropdown />
             <div
               className="flex items-center gap-2 cursor-pointer p-1 rounded-lg hover:bg-nova-surface2 transition-colors"
               onClick={() => onTabChange('settings')}

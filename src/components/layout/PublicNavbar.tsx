@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Menu, X, ChevronDown, Bell, User, LogOut } from 'lucide-react';
 import Logo from '@/components/ui/Logo';
 import { useAppStore } from '@/stores/useAppStore';
+import NotificationDropdown from '@/components/layout/NotificationDropdown';
 import { cn } from '@/lib/utils';
 
 const publicNavItems = [
@@ -151,17 +152,7 @@ const PublicNavbar: React.FC = () => {
           <div className="flex items-center gap-3">
             {isLoggedIn && currentUser ? (
               <>
-                <button
-                  onClick={() => navigate(getDashboardPath(), { state: { activeTab: 'alerts' } })}
-                  className="relative nova-btn-ghost p-2 rounded-xl"
-                >
-                  <Bell size={18} />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-nova-red text-white text-xs rounded-full flex items-center justify-center font-bold">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </button>
+                <NotificationDropdown />
 
                 <div className="relative">
                   <button

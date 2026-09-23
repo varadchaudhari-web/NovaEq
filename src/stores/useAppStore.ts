@@ -2,13 +2,15 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
   AppState, User, Alert, CommunityPost, Strategy, Recommendation,
-  KYCApplication, KYCStatus, SubscriptionPlan, Order, FinancialGoal, SIPPlan, Holding
+  KYCApplication, KYCStatus, SubscriptionPlan, Order, FinancialGoal, SIPPlan, Holding,
+  Course, Webinar, MarketBlog
 } from '@/types';
 import {
   mockUsers, mockHoldings, mockOrders, mockStrategies,
   mockRecommendations, mockAlerts, mockCommunityPosts,
   mockLeaderboard, mockMarketStocks, mockWalletTransactions,
-  mockMutualFunds, mockCourses, mockKYCApplications, mockSubscriptionPlans
+  mockMutualFunds, mockCourses, mockKYCApplications, mockSubscriptionPlans,
+  mockWebinars, mockMarketBlogs
 } from '@/lib/mockData';
 
 const mockInitialGoals: FinancialGoal[] = [
@@ -85,6 +87,7 @@ const mockInitialSIPs: SIPPlan[] = [
 
 interface AppActions {
   login: (email: string, role?: string) => User | null;
+  registerUser: (userData: Partial<User> & { password?: string }) => User;
   logout: () => void;
   setCurrentUser: (user: User) => void;
   setSidebarActive: (item: string) => void;
@@ -116,6 +119,15 @@ interface AppActions {
   updateHolding: (symbol: string, updates: Partial<Holding>) => void;
   enrollCourse: (courseId: string) => void;
   updateCourseProgress: (courseId: string, progress: number) => void;
+  addCourse: (course: Course) => void;
+  updateCourse: (id: string, updates: Partial<Course>) => void;
+  deleteCourse: (id: string) => void;
+  addWebinar: (webinar: Webinar) => void;
+  updateWebinar: (id: string, updates: Partial<Webinar>) => void;
+  deleteWebinar: (id: string) => void;
+  addBlog: (blog: MarketBlog) => void;
+  updateBlog: (id: string, updates: Partial<MarketBlog>) => void;
+  deleteBlog: (id: string) => void;
   deposit: (amount: number, method: string) => void;
   withdraw: (amount: number, bankDetails?: { bankName: string; accountNumber: string; ifsc: string }) => void;
   updateUserKYC: (status: KYCStatus) => void;
@@ -144,6 +156,8 @@ const defaultState: Omit<AppState, keyof AppActions> = {
   walletTransactions: mockWalletTransactions,
   mutualFunds: mockMutualFunds,
   courses: mockCourses,
+  webinars: mockWebinars,
+  marketBlogs: mockMarketBlogs,
   kycApplications: mockKYCApplications,
   subscriptionPlans: mockSubscriptionPlans,
   watchlist: ['RELIANCE', 'TCS', 'HDFCBANK', 'INFY', 'ICICIBANK', 'TATAMOTORS'],
@@ -161,19 +175,86 @@ export const useAppStore = create<AppState & AppActions>()(
     (set, get) => ({
       ...defaultState,
 
+      registerUser: (userData) => {
+        const { users } = get();
+        const id = `usr_${Date.now()}`;
+        const name = userData.name?.trim() || 'Nova Investor';
+        const role = (userData.role as UserRole) || 'investor';
+        const subscription = (userData.subscription as SubscriptionPlan) || 'pro';
+
+        const avatar = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}&backgroundColor=0ea5e9,3b82f6,10b981`;
+
+        const newUser: User = {
+          id,
+          name,
+          email: (userData.email || 'user@novaeq.ai').trim().toLowerCase(),
+          role,
+          avatar,
+          phone: userData.phone || '9876543210',
+          kycStatus: 'submitted',
+          subscription,
+          isVerified: true,
+          joinDate: new Date().toISOString().split('T')[0],
+          riskProfile: userData.riskProfile || 'moderate',
+          goals: userData.goals || ['Early Retirement Wealth'],
+          portfolioValue: role === 'trader' ? 250000 : 150000,
+          totalPnL: 6450,
+          totalPnLPercent: 4.3,
+          followersCount: 1,
+          followingCount: 4,
+          bio: `${role === 'trader' ? 'Active Quant Trader' : role === 'advisor' ? 'Certified Financial Advisor' : 'Wealth Accumulator & Investor'} on NovaEq.`,
+        };
+
+        const filtered = users.filter((u) => u.email.toLowerCase() !== newUser.email.toLowerCase());
+        const updatedUsers = [newUser, ...filtered];
+
+        try {
+          localStorage.setItem('novaeq_registered_users', JSON.stringify(updatedUsers));
+          sessionStorage.setItem('novaeq_session_user', JSON.stringify(newUser));
+        } catch (e) {
+          console.warn('Storage sync:', e);
+        }
+
+        set({
+          users: updatedUsers,
+          currentUser: newUser,
+          isLoggedIn: true,
+          sidebarActive: 'overview',
+        });
+
+        return newUser;
+      },
+
       login: (email: string, role?: string) => {
         const { users } = get();
-        let user = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+
+        // Check local storage registered users first
+        let localUsers: User[] = [];
+        try {
+          const stored = localStorage.getItem('novaeq_registered_users');
+          if (stored) localUsers = JSON.parse(stored);
+        } catch (e) {}
+
+        const allUsers = [...localUsers, ...users];
+
+        let user: User | undefined;
+        if (email && email.trim()) {
+          user = allUsers.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+        }
+
         if (!user && role) {
-          const roleMap: Record<string, string> = {
-            investor: 'u001', trader: 'u002', advisor: 'u003', admin: 'u004',
-          };
-          user = users.find(u => u.id === roleMap[role]);
+          user = allUsers.find((u) => u.role === role);
         }
+
         if (!user) {
-          user = users.find(u => u.role === (role || 'investor'));
+          user = allUsers[0];
         }
+
         if (user) {
+          try {
+            sessionStorage.setItem('novaeq_session_user', JSON.stringify(user));
+          } catch (e) {}
+
           set({ currentUser: user, isLoggedIn: true, sidebarActive: 'overview' });
           return user;
         }
@@ -181,6 +262,9 @@ export const useAppStore = create<AppState & AppActions>()(
       },
 
       logout: () => {
+        try {
+          sessionStorage.removeItem('novaeq_session_user');
+        } catch (e) {}
         set({
           currentUser: null,
           isLoggedIn: false,
@@ -567,6 +651,54 @@ export const useAppStore = create<AppState & AppActions>()(
       updateCourseProgress: (courseId: string, progress: number) => {
         set(state => ({
           courses: state.courses.map(c => c.id === courseId ? { ...c, progress } : c),
+        }));
+      },
+
+      addCourse: (course: Course) => {
+        set(state => ({ courses: [course, ...state.courses] }));
+      },
+
+      updateCourse: (id: string, updates: Partial<Course>) => {
+        set(state => ({
+          courses: state.courses.map(c => c.id === id ? { ...c, ...updates } : c),
+        }));
+      },
+
+      deleteCourse: (id: string) => {
+        set(state => ({
+          courses: state.courses.filter(c => c.id !== id),
+        }));
+      },
+
+      addWebinar: (webinar: Webinar) => {
+        set(state => ({ webinars: [webinar, ...state.webinars] }));
+      },
+
+      updateWebinar: (id: string, updates: Partial<Webinar>) => {
+        set(state => ({
+          webinars: state.webinars.map(w => w.id === id ? { ...w, ...updates } : w),
+        }));
+      },
+
+      deleteWebinar: (id: string) => {
+        set(state => ({
+          webinars: state.webinars.filter(w => w.id !== id),
+        }));
+      },
+
+      addBlog: (blog: MarketBlog) => {
+        set(state => ({ marketBlogs: [blog, ...state.marketBlogs] }));
+      },
+
+      updateBlog: (id: string, updates: Partial<MarketBlog>) => {
+        set(state => ({
+          marketBlogs: state.marketBlogs.map(b => b.id === id ? { ...b, ...updates } : b),
+        }));
+      },
+
+      deleteBlog: (id: string) => {
+        set(state => ({
+          marketBlogs: state.marketBlogs.filter(b => b.id !== id),
         }));
       },
 

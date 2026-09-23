@@ -5,8 +5,6 @@ import {
   Award,
   TrendingUp,
   Brain,
-  Linkedin,
-  Twitter,
   Lock,
   FileText,
   MapPin,
@@ -21,13 +19,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import TiltCard from '@/components/ui/TiltCard';
-
-const team = [
-  { name: 'Aditya Menon', role: 'CEO & Co-Founder', bio: 'Former Goldman Sachs VP, IIT Bombay. 15+ years in fintech and quantitative finance.', avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=120&h=120&fit=crop&crop=face' },
-  { name: 'Neha Kapoor', role: 'CTO & Co-Founder', bio: 'Ex-Google SWE, Stanford CS. Built ML trading systems managing $2B+ AUM.', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=120&h=120&fit=crop&crop=face' },
-  { name: 'Rajan Suri', role: 'Chief Risk Officer', bio: '20 years in risk management at JP Morgan, Deutsche Bank. CFA Charterholder.', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=120&h=120&fit=crop&crop=face' },
-  { name: 'Priya Malhotra', role: 'Head of AI Research', bio: 'PhD in ML from MIT. Former quant researcher at Two Sigma and Citadel.', avatar: 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=120&h=120&fit=crop&crop=face' },
-];
 
 const milestones = [
   { year: '2020', event: 'NovaEq founded by Aditya & Neha in Mumbai' },
@@ -207,27 +198,6 @@ const About: React.FC = () => {
                   <p className="text-sm text-nova-text-muted">{m.event}</p>
                 </TiltCard>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Team with 3D Tilt */}
-      <div className="bg-nova-surface border-y border-nova-border py-14 mb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-display font-bold text-nova-text text-center mb-10">Leadership Team</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {team.map(member => (
-              <TiltCard key={member.name} className="p-5 text-center group cursor-pointer" tiltMaxAngle={10} translateZ={12}>
-                <img src={member.avatar} alt={member.name} className="w-20 h-20 rounded-2xl object-cover mx-auto mb-4 group-hover:scale-105 transition-transform shadow-lg" />
-                <p className="text-sm font-bold text-nova-text">{member.name}</p>
-                <p className="text-xs text-nova-accent mb-2">{member.role}</p>
-                <p className="text-xs text-nova-text-muted leading-relaxed">{member.bio}</p>
-                <div className="flex justify-center gap-2 mt-3">
-                  <a href="#" className="nova-btn-ghost p-1.5 rounded-lg"><Linkedin size={14} /></a>
-                  <a href="#" className="nova-btn-ghost p-1.5 rounded-lg"><Twitter size={14} /></a>
-                </div>
-              </TiltCard>
             ))}
           </div>
         </div>

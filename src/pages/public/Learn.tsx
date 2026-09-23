@@ -308,8 +308,17 @@ const sampleCurriculums: Record<string, { title: string; duration: string; compl
 };
 
 const Learn: React.FC = () => {
-  const { openAuthModal, isLoggedIn, currentUser, enrollCourse, courses, updateCourseProgress, addAlert } =
-    useAppStore();
+  const {
+    openAuthModal,
+    isLoggedIn,
+    currentUser,
+    enrollCourse,
+    courses,
+    webinars,
+    marketBlogs,
+    updateCourseProgress,
+    addAlert,
+  } = useAppStore();
   const [search, setSearch] = useState('');
   const [level, setLevel] = useState('All');
   const [category, setCategory] = useState('All');
@@ -322,8 +331,8 @@ const Learn: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [playbackTime, setPlaybackTime] = useState(145);
 
-  // Webinars State
-  const [webinarList, setWebinarList] = useState<WebinarItem[]>(initialWebinars);
+  // Webinars State (Synced with store)
+  const webinarList = webinars && webinars.length > 0 ? webinars : initialWebinars;
   const [registeredWebinarIds, setRegisteredWebinarIds] = useState<Record<string, boolean>>({});
   const [activeLiveWebinar, setActiveLiveWebinar] = useState<WebinarItem | null>(null);
   const [liveChatMessages, setLiveChatMessages] = useState<{ user: string; text: string; time: string }[]>([
@@ -333,8 +342,8 @@ const Learn: React.FC = () => {
   ]);
   const [newChatMessage, setNewChatMessage] = useState('');
 
-  // Market Blog State
-  const [blogList, setBlogList] = useState<BlogItem[]>(initialBlogs);
+  // Market Blog State (Synced with store)
+  const blogList = marketBlogs && marketBlogs.length > 0 ? marketBlogs : initialBlogs;
   const [activeBlog, setActiveBlog] = useState<BlogItem | null>(null);
   const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
   const [newBlogTitle, setNewBlogTitle] = useState('');

@@ -1,7 +1,8 @@
 import type {
   User, Holding, Order, Strategy, Recommendation, Alert, CommunityPost,
   LeaderboardEntry, MarketStock, WalletTransaction, MutualFund, Course,
-  KYCApplication, SubscriptionPlanData, BacktestResult, CandleData
+  KYCApplication, SubscriptionPlanData, BacktestResult, CandleData,
+  Webinar, MarketBlog
 } from '@/types';
 
 // Generate price history
@@ -478,3 +479,116 @@ export const marketTickerData = [
   { symbol: 'JPM', value: '$218.70', change: '+0.44%', positive: true },
   { symbol: 'V', value: '$283.50', change: '+0.50%', positive: true },
 ];
+
+export const mockWebinars: Webinar[] = [
+  {
+    id: 'web001',
+    title: 'Live: Q1 2024 Global Market Outlook & Sector Rotation',
+    host: 'Marcus Chen',
+    role: 'Chief Market Strategist',
+    date: 'Today · Live Now',
+    registered: 1420,
+    isLive: true,
+    category: 'Macro Economics',
+    description: 'Deep dive into global interest rates, inflation metrics, sector flow rotations, and top institutional conviction ideas.',
+  },
+  {
+    id: 'web002',
+    title: 'Options Masterclass: Mastering the Iron Condor & Volatility Trades',
+    host: 'Priya Sharma',
+    role: 'Lead Quant Researcher',
+    date: 'Tomorrow · 7:00 PM IST',
+    registered: 940,
+    isLive: false,
+    category: 'Options & Derivatives',
+    description: 'Practical setups for range-bound markets, delta-neutral hedging, and real-time risk adjustments during earnings season.',
+  },
+  {
+    id: 'web003',
+    title: 'Understanding Central Bank Monetary Policies & Bond Yields',
+    host: 'Marcus Chen',
+    role: 'Chief Market Strategist',
+    date: 'Jan 28, 2024 · 6:30 PM IST',
+    registered: 760,
+    isLive: false,
+    category: 'Monetary Policy',
+    description: 'How rate cut cycles, liquidity shifts, and treasury yield curves impact equity valuations and risk-on assets.',
+  },
+  {
+    id: 'web004',
+    title: 'Building Automated Trading Bots with Python & Websockets',
+    host: 'Neha Kapoor',
+    role: 'CTO & Co-Founder',
+    date: 'Feb 2, 2024 · 8:00 PM IST',
+    registered: 1850,
+    isLive: false,
+    category: 'Algo Trading',
+    description: 'From historical backtesting to low-latency automated order routing using NovaEq APIs and websocket data streams.',
+  },
+  {
+    id: 'web005',
+    title: 'Risk Management Secrets for High-Frequency Scalpers',
+    host: 'Rajan Suri',
+    role: 'Chief Risk Officer',
+    date: 'Feb 6, 2024 · 5:30 PM IST',
+    registered: 1120,
+    isLive: false,
+    category: 'Risk Control',
+    description: 'Position sizing, VaR models, strict stop-loss discipline, and psychological drawdown mitigation strategies.',
+  },
+];
+
+export const mockMarketBlogs: MarketBlog[] = [
+  {
+    id: 'blog001',
+    title: '10 Lessons from the 2023 Market Rally: What Every Investor Must Know',
+    author: 'Marcus Chen',
+    date: 'Jan 14, 2024',
+    readTime: '8 min',
+    tag: 'Strategy',
+    views: 12400,
+    likes: 412,
+    cover: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?w=800&h=450&fit=crop',
+    content: 'The 2023 market cycle taught us that macroeconomic sentiment can pivot much faster than consensus estimates predict. In this deep dive, we explore how liquidity injections, tech sector earnings resilience, and systematic rebalancing drove an unprecedented breakout.\n\nKey pillars of modern alpha generation involve avoiding market noise, maintaining systematic dollar-cost averaging in quality index components, and leveraging AI models to spot asymmetry before broader earnings revisions hit the tape.',
+    keyTakeaways: [
+      'Momentum often persists longer than fundamental multiples suggest during liquidity expansion.',
+      'Maintaining systematic rebalancing outperforms attempting to time macro rate cut pivots.',
+      'Asymmetrical risk-to-reward setups exist in unloved cyclical sectors during peak pessimism.',
+    ],
+  },
+  {
+    id: 'blog002',
+    title: 'Why AI is Changing Stock Selection and Quant Modeling Forever',
+    author: 'Priya Sharma',
+    date: 'Jan 10, 2024',
+    readTime: '6 min',
+    tag: 'AI & Tech',
+    views: 9800,
+    likes: 388,
+    cover: 'https://images.unsplash.com/photo-1642543492481-44e81e3914a7?w=800&h=450&fit=crop',
+    content: 'Traditional factor investing relied on static quarterly P/E ratios and historical beta. Today, multi-modal transformer models evaluate 500+ real-time variables per equity: transcript tone analysis, supply chain lead indicators, satellite parking data, and live options order flow.\n\nAt NovaEq, our neural architectures continuously compute signal confidence scores to assist traders in identifying divergence between actual intrinsic cash flows and short-term volatility.',
+    keyTakeaways: [
+      'Natural language processing extracts non-linear alpha from conference calls and earnings disclosures.',
+      'Combining sentiment indicators with order book imbalance yields superior short-term entry timing.',
+      'AI models must be coupled with strict VaR constraints to prevent overfitting during black swan events.',
+    ],
+  },
+  {
+    id: 'blog003',
+    title: 'Building a Resilient Dividend Portfolio from Scratch in India',
+    author: 'Marcus Chen',
+    date: 'Jan 6, 2024',
+    readTime: '12 min',
+    tag: 'Investing',
+    views: 8200,
+    likes: 295,
+    cover: 'https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?w=800&h=450&fit=crop',
+    content: 'Dividend growth investing is one of the most reliable wealth accumulation paths. Rather than chasing high yield traps (companies with unsustainable 12%+ yields on falling revenues), focus on Dividend Aristocrats that consistently increase payouts by 10%+ annually with sub-50% payout ratios.\n\nWe break down how to blend FMCG stalwarts, IT cash generators, and energy infrastructure trusts into a compounding dividend snowball.',
+    keyTakeaways: [
+      'Quality free cash flow yield matters significantly more than trailing dividend yield.',
+      'Reinvesting dividend distributions during corrections generates substantial long-term alpha.',
+      'Target companies with pricing power capable of passing inflationary shocks to consumers.',
+    ],
+  },
+];
+

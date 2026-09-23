@@ -16,6 +16,10 @@ const Learn = lazy(() => import('@/pages/public/Learn'));
 const Community = lazy(() => import('@/pages/public/Community'));
 const About = lazy(() => import('@/pages/public/About'));
 const Contact = lazy(() => import('@/pages/public/Contact'));
+const PrivacyPolicy = lazy(() => import('@/pages/public/legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('@/pages/public/legal/TermsOfService'));
+const SecurityCompliance = lazy(() => import('@/pages/public/legal/SecurityCompliance'));
+const RiskDisclosure = lazy(() => import('@/pages/public/legal/RiskDisclosure'));
 
 // Auth Pages
 const Login = lazy(() => import('@/pages/auth/Login'));
@@ -85,7 +89,7 @@ const NotFound: React.FC = () => (
 
 const App: React.FC = () => {
   return (
-    <BrowserRouter>
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <Toaster position="top-right" richColors />
       <RouteScrollToTop />
       <ScrollToTop />
@@ -101,6 +105,10 @@ const App: React.FC = () => {
           <Route path="/community" element={<PublicLayout><Community /></PublicLayout>} />
           <Route path="/about" element={<PublicLayout><About /></PublicLayout>} />
           <Route path="/contact" element={<PublicLayout><Contact /></PublicLayout>} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/security" element={<SecurityCompliance />} />
+          <Route path="/risk-disclosure" element={<RiskDisclosure />} />
 
           {/* Auth Routes (with navbar) */}
           <Route path="/login" element={<PublicLayout><Login /></PublicLayout>} />

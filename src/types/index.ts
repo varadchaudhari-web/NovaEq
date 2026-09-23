@@ -268,6 +268,32 @@ export interface SIPPlan {
   installmentsPaid: number;
 }
 
+export interface Webinar {
+  id: string;
+  title: string;
+  host: string;
+  role: string;
+  date: string;
+  registered: number;
+  isLive: boolean;
+  category: string;
+  description: string;
+}
+
+export interface MarketBlog {
+  id: string;
+  title: string;
+  author: string;
+  date: string;
+  readTime: string;
+  tag: string;
+  views: number;
+  likes: number;
+  cover: string;
+  content: string;
+  keyTakeaways: string[];
+}
+
 export interface AppState {
   currentUser: User | null;
   isLoggedIn: boolean;
@@ -284,6 +310,8 @@ export interface AppState {
   walletTransactions: WalletTransaction[];
   mutualFunds: MutualFund[];
   courses: Course[];
+  webinars: Webinar[];
+  marketBlogs: MarketBlog[];
   kycApplications: KYCApplication[];
   subscriptionPlans: SubscriptionPlanData[];
   watchlist: string[];

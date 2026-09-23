@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Star, Users, BarChart2, Plus, Brain, Globe, TrendingUp, FileText, BookOpen } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -25,6 +25,14 @@ const AdvisorDashboard: React.FC = () => {
   } = useAppStore();
   const location = useLocation();
   const [activeTab, setActiveTab] = useState((location.state as { activeTab?: string } | null)?.activeTab || 'overview');
+
+  useEffect(() => {
+    const stateTab = (location.state as { activeTab?: string } | null)?.activeTab;
+    if (stateTab) {
+      setActiveTab(stateTab);
+    }
+  }, [location.state]);
+
   const [showNewRec, setShowNewRec] = useState(false);
   const [newRec, setNewRec] = useState({ symbol: '', action: 'buy', targetPrice: '', risk: 'medium', rationale: '', timeHorizon: '6 months' });
 

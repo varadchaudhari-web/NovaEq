@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   TrendingUp,
@@ -30,6 +30,7 @@ import {
   MessageSquare,
   Share2,
   Heart,
+  Zap,
   X
 } from 'lucide-react';
 import {
@@ -77,6 +78,7 @@ const RetailInvestorDashboard: React.FC = () => {
     mutualFunds,
     courses,
     markAlertRead,
+    markAllAlertsRead,
     toggleFollowRecommendation,
     addOrder,
     closeHolding,
@@ -95,6 +97,15 @@ const RetailInvestorDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState(
     (location.state as { activeTab?: string } | null)?.activeTab || 'overview'
   );
+
+  const [alertFilter, setAlertFilter] = useState<'all' | 'unread' | 'price' | 'execution'>('all');
+
+  useEffect(() => {
+    const stateTab = (location.state as { activeTab?: string } | null)?.activeTab;
+    if (stateTab) {
+      setActiveTab(stateTab);
+    }
+  }, [location.state]);
 
   // Modals state
   const [showDepositModal, setShowDepositModal] = useState(false);
@@ -906,6 +917,128 @@ const RetailInvestorDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Alerts & Notifications Feed Tab */}
+      {activeTab === 'alerts' && (
+        <div className="space-y-5 animate-fade-in">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h2 className="nova-section-title">Alerts & Real-Time Intelligence Feed</h2>
+              <p className="text-xs text-nova-text-muted mt-0.5">
+                Real-time price threshold triggers, order fills, AI rebalancing signals, and risk warnings.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={markAllAlertsRead}
+                className="nova-btn-outline text-xs py-2 px-3.5 flex items-center gap-1.5"
+              >
+                <CheckCircle2 size={14} className="text-emerald-400" />
+                <span>Mark All as Read</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Alert Filters Bar */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            {[
+              { id: 'all', label: `All Alerts (${alerts.length})` },
+              { id: 'unread', label: `Unread (${alerts.filter((a) => !a.isRead).length})` },
+              { id: 'price', label: `Price Triggers (${alerts.filter((a) => a.type === 'price').length})` },
+              { id: 'execution', label: `Orders & Fills (${alerts.filter((a) => a.type === 'execution' || a.type === 'portfolio').length})` },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setAlertFilter(tab.id as any)}
+                className={cn(
+                  'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all',
+                  alertFilter === tab.id
+                    ? 'bg-nova-primary text-white shadow-md'
+                    : 'bg-nova-surface2 border border-nova-border text-nova-text-muted hover:text-white'
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Alerts Feed List */}
+          <div className="space-y-3">
+            {alerts
+              .filter((a) => {
+                if (alertFilter === 'unread') return !a.isRead;
+                if (alertFilter === 'price') return a.type === 'price';
+                if (alertFilter === 'execution') return a.type === 'execution' || a.type === 'portfolio';
+                return true;
+              })
+              .map((alert) => (
+                <div
+                  key={alert.id}
+                  onClick={() => markAlertRead(alert.id)}
+                  className={cn(
+                    'nova-card p-4 transition-all flex items-start justify-between gap-4 cursor-pointer hover:border-nova-primary/40',
+                    !alert.isRead ? 'border-nova-primary/40 bg-nova-primary/5' : 'bg-nova-surface'
+                  )}
+                >
+                  <div className="flex items-start gap-3 min-w-0">
+                    <div
+                      className={cn(
+                        'w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5',
+                        alert.type === 'price'
+                          ? 'bg-emerald-500/15 text-emerald-400'
+                          : alert.type === 'execution'
+                          ? 'bg-amber-500/15 text-amber-400'
+                          : 'bg-blue-500/15 text-blue-400'
+                      )}
+                    >
+                      {alert.type === 'price' ? (
+                        <TrendingUp size={18} />
+                      ) : alert.type === 'execution' ? (
+                        <Zap size={18} />
+                      ) : (
+                        <Bell size={18} />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className="text-sm font-bold text-nova-text">{alert.title}</span>
+                        {!alert.isRead && (
+                          <span className="w-2 h-2 rounded-full bg-nova-primary animate-pulse" />
+                        )}
+                        {alert.symbol && (
+                          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-nova-surface2 border border-nova-border text-nova-accent font-bold">
+                            {alert.symbol}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-nova-text-muted leading-relaxed mb-1.5">{alert.message}</p>
+                      <span className="text-[11px] text-nova-text-subtle">{formatTimeAgo(alert.createdAt)}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    {alert.symbol && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTradeModal({
+                            open: true,
+                            symbol: alert.symbol || 'RELIANCE',
+                            type: 'buy',
+                            price: 2950,
+                          });
+                        }}
+                        className="nova-btn-primary text-xs py-1.5 px-3 flex items-center gap-1 font-bold"
+                      >
+                        Trade {alert.symbol}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
           </div>
         </div>
       )}
